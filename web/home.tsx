@@ -349,8 +349,8 @@ function CreatedView({ c }: { c: Created }) {
         <tbody>
           {c.stampUrls.map((u, i) => (
             <tr key={u}>
-              <td>Stamp {i + 1}</td>
-              <td style={{ textAlign: 'right' }}>
+              <td style={{ verticalAlign: 'middle' }}>Stamp {i + 1}</td>
+              <td style={{ textAlign: 'right', verticalAlign: 'middle' }}>
                 <a className="button inline" style={{ width: 'auto', padding: '8px 12px', fontSize: 14 }} href={u} target="_blank" rel="noreferrer">
                   Open
                 </a>{' '}

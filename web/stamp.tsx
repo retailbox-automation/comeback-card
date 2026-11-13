@@ -58,7 +58,8 @@ function StampView({ link }: { link: StampLink }) {
   const [rate, setRate] = useState<number | null>(null);
   const [mtp, setMtp] = useState<bigint | null>(null);
   const [buying, setBuying] = useState(false);
-  const [buyResult, setBuyResult] = useState<{ ok: true; txid: string } | { ok: false; error: string } | null>(null);
+  // fromNode: the text is the node's verbatim answer; otherwise it is our own message (never labelled as the node's).
+  const [buyResult, setBuyResult] = useState<{ ok: true; txid: string } | { ok: false; error: string; fromNode: boolean } | null>(null);
 
   usePoll(
     async () => {
@@ -83,14 +84,14 @@ function StampView({ link }: { link: StampLink }) {
     try {
       const utxos = (await prov.getUtxos(contract.address)).filter((u) => !u.token);
       if (utxos.length === 0) {
-        setBuyResult({ ok: false, error: 'This stamp has no coins right now (already spent or returned). Refreshing its status…' });
+        setBuyResult({ ok: false, fromNode: false, error: 'Someone was first: this stamp was already spent or returned to the sponsor. Its status below shows which.' });
         return;
       }
       const { builder } = buildSpend(contract, prov, utxos[0]!, link.stampPrivateKey, link.merchantLockingBytecode);
       const r = await broadcastRaw(net, builder.build());
-      setBuyResult(r.ok ? { ok: true, txid: r.txid } : { ok: false, error: r.nodeError });
+      setBuyResult(r.ok ? { ok: true, txid: r.txid } : { ok: false, fromNode: true, error: r.nodeError });
     } catch (e) {
-      setBuyResult({ ok: false, error: e instanceof Error ? e.message : String(e) });
+      setBuyResult({ ok: false, fromNode: false, error: e instanceof Error ? e.message : String(e) });
     } finally {
       setBuying(false);
     }
@@ -135,7 +136,8 @@ function StampView({ link }: { link: StampLink }) {
           </>
         )}
 
-        {buyResult && !buyResult.ok && (
+        {buyResult && !buyResult.ok && !buyResult.fromNode && <Notice kind="warn">{buyResult.error}</Notice>}
+        {buyResult && !buyResult.ok && buyResult.fromNode && (
           <Notice kind={explainNodeError(buyResult.error).cls === 'already-gone' ? 'warn' : 'bad'}>
             <strong>{explainNodeError(buyResult.error).plain}</strong>
             <div className="small" style={{ marginTop: 6 }}>The network’s own words:</div>
