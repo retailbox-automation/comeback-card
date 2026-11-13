@@ -110,7 +110,9 @@ function StampView({ link }: { link: StampLink }) {
           <div className="amount">{usd ?? (satoshis !== null ? formatSats(satoshis) : '…')}</div>
           <div>Spend it at</div>
           <div className="shop">{link.merchantName || 'this shop'}</div>
-          <div className="muted small" style={{ marginTop: 8 }}>No wallet or app needed.</div>
+          <div className="muted small" style={{ marginTop: 8 }}>
+            No wallet or app needed.{net === 'chipnet' ? ' Test network: these coins have no real value.' : ''}
+          </div>
         </div>
 
         {loadError && <Notice kind="warn">{loadError}</Notice>}
