@@ -34,6 +34,26 @@ export function provider(net: ChainNet, serverIndex = 0): ElectrumNetworkProvide
   return new ElectrumNetworkProvider(net, { hostname });
 }
 
+/**
+ * Median time past of the last 11 blocks, in unix seconds. A node accepts a transaction whose
+ * timestamp locktime is below this value, so a stamp can be returned only once MTP > expiry.
+ * MTP usually trails the wall clock by about an hour.
+ */
+export async function medianTimePast(net: ChainNet): Promise<bigint> {
+  const p = provider(net);
+  const tip = (await p.performRequest('blockchain.headers.get_tip')) as { height: number };
+  const res = (await p.performRequest('blockchain.block.headers', tip.height - 10, 11)) as { hex: string; count: number };
+  const times: number[] = [];
+  for (let i = 0; i < res.count; i++) {
+    const header = res.hex.slice(i * 160, i * 160 + 160);
+    const tsHex = header.slice(136, 144); // bytes 68..71, little-endian
+    const le = tsHex.match(/../g)!.reverse().join('');
+    times.push(parseInt(le, 16));
+  }
+  times.sort((a, b) => a - b);
+  return BigInt(times[Math.floor(times.length / 2)]!);
+}
+
 export type BroadcastResult = { ok: true; txid: string } | { ok: false; nodeError: string };
 
 /**
