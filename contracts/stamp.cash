@@ -1,0 +1,28 @@
+pragma cashscript ^0.14.0;
+
+// First Purchase stamp, variant A: the sponsor signs the reclaim.
+//
+// One contract instance (one UTXO) per stamp.
+// - spend:   whoever holds the stamp key can pay the full stamp value to ONE merchant.
+//            The only freedom is the miner fee, capped by maxFee.
+// - reclaim: after the expiry time, the sponsor takes the stamp back with their own key.
+contract FirstPurchaseStamp(
+    pubkey stampPk,
+    bytes merchantLockingBytecode,
+    pubkey sponsorPk,
+    int expiry,
+    int maxFee
+) {
+    function spend(sig stampSig) {
+        require(checkSig(stampSig, stampPk), "stamp key signature required");
+        require(tx.inputs.length == 1, "stamp must be spent alone");
+        require(tx.outputs.length == 1, "exactly one output: the merchant");
+        require(tx.outputs[0].lockingBytecode == merchantLockingBytecode, "output must pay the merchant");
+        require(tx.outputs[0].value >= tx.inputs[0].value - maxFee, "fee above the cap");
+    }
+
+    function reclaim(sig sponsorSig) {
+        require(checkSig(sponsorSig, sponsorPk), "sponsor signature required");
+        require(tx.time >= expiry, "stamp has not expired yet");
+    }
+}
