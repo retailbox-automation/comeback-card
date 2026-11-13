@@ -25,6 +25,43 @@ export type WalletState =
   | { kind: 'reconnecting' }
   | { kind: 'disconnected'; message?: string };
 
+/**
+ * Independent relay check. @wizardconnect/core reports "connected" after a 5 s EOSE timeout even when
+ * no relay answered (relay-client.js: "EOSE timeout, assuming ready"), so its status cannot tell us the
+ * relay is down. Resolves true as soon as any relay accepts a WebSocket, false after `timeoutMs`.
+ */
+export function probeRelays(urls: string[], timeoutMs: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    let pending = urls.length;
+    const sockets: WebSocket[] = [];
+    const done = (ok: boolean) => {
+      clearTimeout(timer);
+      for (const s of sockets) {
+        try {
+          s.close();
+        } catch {
+          /* already closed */
+        }
+      }
+      resolve(ok);
+    };
+    const timer = setTimeout(() => done(false), timeoutMs);
+    if (pending === 0) return done(false);
+    for (const u of urls) {
+      try {
+        const s = new WebSocket(u);
+        sockets.push(s);
+        s.onopen = () => done(true);
+        s.onerror = () => {
+          if (--pending === 0) done(false);
+        };
+      } catch {
+        if (--pending === 0) done(false);
+      }
+    }
+  });
+}
+
 export type PathName = 'receive' | 'change';
 const CHILD: Record<PathName, number> = { receive: 0, change: 1 };
 
@@ -33,13 +70,13 @@ export type SignResult = { ok: true; signedHex: string } | { ok: false; error: s
 export class WizardWallet {
   private manager: DappConnectionManager | null = null;
   private relay: DappRelayResult | null = null;
-  private relayTimer: ReturnType<typeof setTimeout> | null = null;
   state: WalletState = { kind: 'idle' };
 
   constructor(
     private readonly dappName: string,
     private readonly dappIcon: string | undefined,
     private readonly onChange: (s: WalletState) => void,
+    private readonly relayUrls: string[] = RELAY_URLS,
   ) {}
 
   private set(s: WalletState) {
@@ -52,7 +89,6 @@ export class WizardWallet {
     const mgr = new DappConnectionManager(this.dappName, this.dappIcon, { session: false });
     this.manager = mgr;
     mgr.on('walletready', () => {
-      this.clearRelayTimer();
       // Selene 2026.10.02 sends wallet_ready twice: first with no paths (before the person taps
       // "Connect" in the wallet), then with the xpubs. Only the second one is a usable connection.
       if (mgr.getSessionPaths().length === 0) {
@@ -61,7 +97,11 @@ export class WizardWallet {
       }
       this.set({ kind: 'connected', walletName: mgr.walletName, net: this.network() });
     });
-    mgr.on('reconnecting', () => this.set({ kind: 'reconnecting' }));
+    // A relay retry before any wallet connected is not a "dropped connection": stay in pairing,
+    // the relay timer below decides when to say the relay is down.
+    mgr.on('reconnecting', () => {
+      if (this.state.kind === 'connected') this.set({ kind: 'reconnecting' });
+    });
     mgr.on('disconnect', (_reason, message) => {
       this.set({ kind: 'disconnected', message: message ?? undefined });
       this.relay?.cleanup();
@@ -76,25 +116,28 @@ export class WizardWallet {
           if (this.state.kind === 'pairing') this.set({ ...this.state, relayUp: true });
         }
       },
-      { explicitRelayUrls: RELAY_URLS },
+      { explicitRelayUrls: this.relayUrls },
     );
     this.relay = relay;
     mgr.attachRelay(relay);
     this.set({ kind: 'pairing', uri: relay.uri, qrUri: relay.qrUri, relayUp: false });
-    this.relayTimer = setTimeout(() => {
-      if (!relayUp && this.state.kind === 'pairing') {
-        this.set({
-          kind: 'relay-down',
-          message:
-            'The WizardConnect relay is not answering right now (tried relay.riften.net and relay.cauldron.quest). ' +
-            'Nothing was sent. Please try again in a minute.',
-        });
-      }
-    }, RELAY_TIMEOUT_MS);
+    void probeRelays(this.relayUrls, RELAY_TIMEOUT_MS).then((reachable) => {
+      if (reachable || this.manager !== mgr || this.state.kind === 'connected') return;
+      // Stop the background retries; the person gets a clear message and a "Try again" button.
+      mgr.destroy();
+      relay.cleanup();
+      this.manager = null;
+      this.relay = null;
+      this.set({
+        kind: 'relay-down',
+        message:
+          `The WizardConnect relay is not answering right now (tried ${this.relayUrls.map((u) => new URL(u).hostname).join(' and ')}). ` +
+          'Nothing was sent. Please try again in a minute.',
+      });
+    });
   }
 
   stop(): void {
-    this.clearRelayTimer();
     if (this.manager) {
       this.manager.sendDisconnect().catch(() => {});
       this.manager.destroy();
@@ -103,11 +146,6 @@ export class WizardWallet {
     this.manager = null;
     this.relay = null;
     this.set({ kind: 'idle' });
-  }
-
-  private clearRelayTimer() {
-    if (this.relayTimer) clearTimeout(this.relayTimer);
-    this.relayTimer = null;
   }
 
   /** Chain of the connected wallet, read from the xpub version of its receive path. */

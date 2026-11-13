@@ -73,7 +73,16 @@ function App() {
 function Create() {
   const [ws, setWs] = useState<WalletState>({ kind: 'idle' });
   const walletRef = useRef<WizardWallet | null>(null);
-  if (!walletRef.current) walletRef.current = new WizardWallet('First Purchase', new URL('./favicon.svg', location.href).toString(), setWs);
+  if (!walletRef.current) {
+    // Dev-only hook for the red-team check "relay is down": ?relays=wss://host1,wss://host2
+    const devRelays = import.meta.env.DEV ? new URLSearchParams(location.search).get('relays') : null;
+    walletRef.current = new WizardWallet(
+      'First Purchase',
+      new URL('./favicon.svg', location.href).toString(),
+      setWs,
+      devRelays ? devRelays.split(',') : undefined,
+    );
+  }
   const wallet = walletRef.current;
   useEffect(() => () => wallet.stop(), [wallet]);
 
