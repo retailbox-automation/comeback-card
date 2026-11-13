@@ -16,7 +16,7 @@ export default defineConfig({
         stamp: page('stamp'),
         shop: page('shop'),
         campaign: page('campaign'),
-        lab: page('lab'),
+        // lab.html (the wallet spike page) is served by the dev server only and never shipped.
       },
     },
   },

@@ -27,6 +27,7 @@ export const DEMO_SHOP = {
   name: 'Maple Street Coffee (demo)',
   address: {
     chipnet: 'bchtest:qq7k45t0cjt8ncpxyrqpcmcsapey22am4v46sxwlxj',
-    mainnet: '', // set after the mainnet go-ahead
+    // Key generated 13.11.2026 ~17:59Z, held only in the vault; no coins on it until the demo is funded.
+    mainnet: 'bitcoincash:qzyqzwa3nhn543a5x2zyqgr4djmj65h3pv3je90tf0',
   } satisfies Record<ChainNet, string>,
 } as const;

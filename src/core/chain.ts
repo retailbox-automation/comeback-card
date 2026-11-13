@@ -15,7 +15,9 @@ export const PREFIX: Record<ChainNet, 'bitcoincash' | 'bchtest'> = {
 };
 
 // Explorers checked 13.11 16:55Z: chipnet.imaginary.cash serves the tx page (200, txid in HTML);
-// chipnet.chaingraph.cash answered 403. Mainnet explorer is re-checked with a real mainnet txid before go-live.
+// chipnet.chaingraph.cash answered 403. Mainnet, probed 13.11 ~18:00Z with a real coinbase txid (server HTML only):
+// bch.loping.net puts a bot check (Anubis) before the page; blockchain.com and blockexplorer.one serve the tx page
+// with the txid; blockchair and 3xpl ask bots to verify. Final pick after a look in a real browser.
 const EXPLORER: Record<ChainNet, string> = {
   mainnet: 'https://bch.loping.net',
   chipnet: 'https://chipnet.imaginary.cash',
