@@ -12,7 +12,10 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: {
+        index: page('index'),
         stamp: page('stamp'),
+        shop: page('shop'),
+        campaign: page('campaign'),
         lab: page('lab'),
       },
     },
