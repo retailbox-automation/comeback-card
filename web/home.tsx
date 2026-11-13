@@ -131,7 +131,8 @@ function Connected({ wallet, walletName }: { wallet: WizardWallet; walletName: s
   const prov = useMemo(() => provider(NET), []);
   const [coins, setCoins] = useState<WalletCoin[] | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
-  const [rate, setRate] = useState<number | null>(null);
+  // undefined while the price is loading, null if the price service did not answer.
+  const [rate, setRate] = useState<number | null | undefined>(undefined);
 
   const [shopMode, setShopMode] = useState<'demo' | 'own'>('demo');
   const [ownShop, setOwnShop] = useState('');
@@ -173,10 +174,13 @@ function Connected({ wallet, walletName }: { wallet: WizardWallet; walletName: s
 
   if (walletNet !== NET) {
     return (
-      <Notice kind="bad">
-        {walletName ?? 'Your wallet'} is on {walletNet === 'unknown' ? 'an unknown network' : walletNet}. This site runs on {NET}. Switch the
-        wallet’s network, then connect again.
-      </Notice>
+      <>
+        <Notice kind="bad">
+          {walletName ?? 'Your wallet'} is on {walletNet === 'unknown' ? 'an unknown network' : walletNet}. This site runs on {NET}. Switch the
+          wallet’s network, then connect again.
+        </Notice>
+        <button onClick={() => wallet.start()}>Connect again</button>
+      </>
     );
   }
 
@@ -193,7 +197,8 @@ function Connected({ wallet, walletName }: { wallet: WizardWallet; walletName: s
   })();
   const expiry = BigInt(Math.floor(Date.now() / 1000) + days * 86400);
   const total = satsPerStamp * BigInt(count);
-  const canCreate = shopCheck.ok && satsPerStamp >= MIN_STAMP_SATS && count >= 1 && count <= 10 && !busy && !created;
+  const canCreate =
+    rate !== undefined && shopCheck.ok && satsPerStamp >= MIN_STAMP_SATS && count >= 1 && count <= 10 && !busy && !created;
 
   async function create() {
     if (!shopCheck.ok) return;
@@ -301,7 +306,8 @@ function Connected({ wallet, walletName }: { wallet: WizardWallet; walletName: s
         ))}
       </div>
       <p className="muted small">
-        = {formatSats(satsPerStamp)} per stamp{rate ? ` at $${rate.toFixed(2)}/BCH` : ' (price service unavailable, using a fixed amount)'}
+        = {formatSats(satsPerStamp)} per stamp
+        {rate ? ` at $${rate.toFixed(2)}/BCH` : rate === undefined ? ' (loading the BCH price…)' : ' (price service unavailable, using a fixed amount)'}
         {NET === 'chipnet' ? '. Test coins have no value.' : '.'}
       </p>
 
