@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>First Purchase lab</title>
+    <style>
+      body { font: 14px/1.4 system-ui, sans-serif; margin: 16px; max-width: 920px; background: #fff; color: #111; }
+      button { font: inherit; padding: 6px 10px; margin: 4px 4px 4px 0; }
+      textarea { width: 100%; height: 56px; font: 12px ui-monospace, monospace; }
+      pre { background: #f4f4f4; padding: 8px; white-space: pre-wrap; word-break: break-all; font-size: 12px; }
+      .warn { color: #a40; }
+      section { border-top: 1px solid #ddd; padding-top: 8px; margin-top: 8px; }
+    </style>
+  </head>
+  <body>
+    <h2>First Purchase · chipnet lab (spike, not for judges)</h2>
+    <section>
+      <button id="connect">Connect wallet (WizardConnect)</button>
+      <button id="disconnect">Disconnect</button>
+      <div id="state">idle</div>
+      <textarea id="uri" readonly placeholder="wiz:// pairing link appears here"></textarea>
+      <div id="wallet"></div>
+    </section>
+    <section>
+      <button id="scan">Scan wallet coins</button>
+      <button id="probeA">A · create 3 stamps (wallet signs P2PKH inputs)</button>
+      <button id="probeB">B · reclaim S1 via wallet (contract input, sponsor sig)</button>
+      <button id="probeC">C · reclaim S2 by covenant (no signature)</button>
+      <button id="probeD1">D1 · spend S3 to my own address (expect node rejection)</button>
+      <button id="probeD2">D2 · spend S3 to the merchant</button>
+    </section>
+    <pre id="log"></pre>
+    <script type="module" src="./lab.ts"></script>
+  </body>
+</html>
