@@ -138,7 +138,9 @@ export function Sticker({ txid, shop }: { txid: string; shop: string }) {
         <circle cx="110" cy="110" r="104" fill={`hsl(${hue} 55% 92%)`} stroke={`hsl(${hue} 45% 38%)`} strokeWidth="6" strokeDasharray="10 7" />
         <text x="110" y="100" textAnchor="middle" fontSize="64">{icon}</text>
         <text x="110" y="138" textAnchor="middle" fontSize="15" fontWeight="700" fill={`hsl(${hue} 45% 25%)`}>FIRST PURCHASE</text>
-        <text x="110" y="158" textAnchor="middle" fontSize="12" fill={`hsl(${hue} 30% 30%)`}>{shop.slice(0, 26)}</text>
+        <text x="110" y="158" textAnchor="middle" fontSize="12" fill={`hsl(${hue} 30% 30%)`}>
+          {[...shop].length > 26 ? `${[...shop].slice(0, 25).join('')}…` : shop}
+        </text>
         <text x="110" y="178" textAnchor="middle" fontSize="11" fontFamily="monospace" fill={`hsl(${hue} 30% 35%)`}>{txid.slice(0, 12)}</text>
       </svg>
     </div>
