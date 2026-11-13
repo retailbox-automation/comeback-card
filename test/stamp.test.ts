@@ -223,6 +223,19 @@ describe('stamp variant cov: reclaim', () => {
     await nodeRejects(w.provider, builder);
   });
 
+  it('rejects reclaiming two stamps in one transaction (would let a griefer burn one stamp as miner fee)', async () => {
+    // Both stamps check outputs[0] against inputs[0]; without the single-input rule the second
+    // stamp's value could be left to miners. Found by the mutation test (13.11.2026).
+    const second = w.provider.addUtxo(w.contract.address, randomUtxo({ satoshis: STAMP_SATS }));
+    const b = new TransactionBuilder({ provider: w.provider })
+      .setLocktime(Number(EXPIRY))
+      .addInput(w.utxo, w.contract.unlock.reclaim!())
+      .addInput(second, w.contract.unlock.reclaim!())
+      .addOutput({ to: w.sponsorLB, amount: STAMP_SATS - 1_000n });
+    expect(b).toFailRequireWith('stamp must be reclaimed alone');
+    await nodeRejects(w.provider, b);
+  });
+
   it('rejects reclaim with an extra output', async () => {
     const b = new TransactionBuilder({ provider: w.provider })
       .setLocktime(Number(EXPIRY))
