@@ -67,14 +67,27 @@ export async function stampState(
   return { kind: 'moved-elsewhere', funding, spend: spend.s };
 }
 
-/** Electrum-backed reader built on a CashScript contract's provider. */
-export function readerFor(contract: Contract): ChainReader {
-  const p = contract.provider as unknown as {
-    performRequest: (name: string, ...params: (string | number | boolean)[]) => Promise<unknown>;
-    getRawTransaction: (txid: string) => Promise<string>;
-  };
+type ElectrumLike = {
+  performRequest: (name: string, ...params: (string | number | boolean)[]) => Promise<unknown>;
+  getRawTransaction: (txid: string) => Promise<string>;
+};
+
+/** Electrum-backed reader on any CashScript ElectrumNetworkProvider. Raw transactions are cached (they never change). */
+export function readerOn(p: ElectrumLike): ChainReader {
+  const raw = new Map<string, string>();
   return {
     history: async (sh) => (await p.performRequest('blockchain.scripthash.get_history', sh)) as Array<{ tx_hash: string; height: number }>,
-    rawTx: (txid) => p.getRawTransaction(txid),
+    rawTx: async (txid) => {
+      const hit = raw.get(txid);
+      if (hit) return hit;
+      const hex = await p.getRawTransaction(txid);
+      raw.set(txid, hex);
+      return hex;
+    },
   };
+}
+
+/** Electrum-backed reader built on a CashScript contract's provider. */
+export function readerFor(contract: Contract): ChainReader {
+  return readerOn(contract.provider as unknown as ElectrumLike);
 }
