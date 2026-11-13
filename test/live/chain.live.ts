@@ -1,6 +1,7 @@
 // Live chipnet checks (run with LIVE=1). They read the public chain; they never send money.
 import { describe, expect, it } from 'vitest';
-import { medianTimePast, provider } from '../../src/core/chain';
+import { ElectrumNetworkProvider } from 'cashscript';
+import { FailoverProvider, medianTimePast, singleServer } from '../../src/core/chain';
 
 describe('chipnet, live', () => {
   it('median time past is a recent unix time, behind the wall clock', async () => {
@@ -12,8 +13,14 @@ describe('chipnet, live', () => {
   });
 
   it('second Fulcrum server answers the same tip', async () => {
-    const a = await provider('chipnet', 0).getBlockHeight();
-    const b = await provider('chipnet', 1).getBlockHeight();
+    const a = await singleServer('chipnet', 0).getBlockHeight();
+    const b = await singleServer('chipnet', 1).getBlockHeight();
     expect(Math.abs(a - b)).toBeLessThanOrEqual(1);
+  });
+
+  it('failover: a dead first server does not stop reads', async () => {
+    const dead = new ElectrumNetworkProvider('chipnet', { hostname: 'no-such-host.invalid' });
+    const p = new FailoverProvider('chipnet', [dead, singleServer('chipnet', 0)]);
+    expect(await p.getBlockHeight()).toBeGreaterThan(300_000);
   });
 });
