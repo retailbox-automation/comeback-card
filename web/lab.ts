@@ -26,7 +26,6 @@ import {
 
 const NET = 'chipnet' as const;
 const STAMP_SATS = 110_000n;
-const P2PKH_UNLOCK_BYTES = 100n; // 65-byte sig push + 33-byte pubkey push, missing from placeholder inputs
 const LS = 'bchfp-lab-v1';
 
 type LabStamp = {
@@ -185,7 +184,8 @@ async function probeA() {
   };
   const outTotal = STAMP_SATS * BigInt(stamps.length);
   const probe = make(sum - outTotal - 2_000n);
-  const size = BigInt(probe.getTransactionSize()) + P2PKH_UNLOCK_BYTES * BigInt(picked.length);
+  // getTransactionSize() already counts placeholder inputs at their signed size (CashScript 0.14).
+  const size = BigInt(probe.getTransactionSize());
   const fee = size + 20n;
   const builder = make(sum - outTotal - fee);
   const wc = builder.generateWcTransactionObject({ broadcast: false, userPrompt: 'Create 3 First Purchase stamps (chipnet lab)' });
