@@ -15,6 +15,8 @@ import {
 import { generatePrivateKey, publicKeyToP2pkhCashAddress } from '@bitauth/libauth';
 import {
   DEFAULT_MAX_FEE,
+  DUST_SATS,
+  MIN_STAMP_SATS,
   buildReclaimCov,
   buildReclaimSig,
   buildSpend,
@@ -238,6 +240,67 @@ describe('stamp variant cov: reclaim', () => {
       .addOutput({ to: w.sponsorLB, amount: STAMP_SATS - DEFAULT_MAX_FEE - 1n });
     expect(b).toFailRequireWith('fee above the cap');
     await nodeRejects(w.provider, b);
+  });
+});
+
+describe('stamp variant cov: after expiry both outcomes are possible, exactly one wins', () => {
+  // After the expiry a reclaim and a shop spend race; the network takes the first one seen.
+  it('reclaim first, then the shop spend is refused by the node', async () => {
+    const w = makeWorld('cov');
+    const reclaim = buildReclaimCov(w.contract, w.provider, w.utxo, w.sponsorLB, EXPIRY);
+    const spend = buildSpend(w.contract, w.provider, w.utxo, w.stampKey, w.merchantLB);
+    await w.provider.sendRawTransaction(reclaim.builder.build());
+    await nodeRejects(w.provider, spend.builder);
+    expect(await w.provider.getUtxosForLockingBytecode(w.sponsorLB)).toHaveLength(1);
+    expect(await w.provider.getUtxosForLockingBytecode(w.merchantLB)).toHaveLength(0);
+  });
+
+  it('shop spend first, then the reclaim is refused by the node', async () => {
+    const w = makeWorld('cov');
+    const reclaim = buildReclaimCov(w.contract, w.provider, w.utxo, w.sponsorLB, EXPIRY);
+    const spend = buildSpend(w.contract, w.provider, w.utxo, w.stampKey, w.merchantLB);
+    await w.provider.sendRawTransaction(spend.builder.build());
+    await nodeRejects(w.provider, reclaim.builder);
+    expect(await w.provider.getUtxosForLockingBytecode(w.merchantLB)).toHaveLength(1);
+    expect(await w.provider.getUtxosForLockingBytecode(w.sponsorLB)).toHaveLength(0);
+  });
+});
+
+describe('fees and dust, in numbers', () => {
+  // Smallest stamp the app allows: MIN_STAMP_SATS. Every output must stay above dust (546 sats).
+  for (const variant of ['sig', 'cov'] as const) {
+    it(`variant ${variant}: a minimum stamp pays the merchant well above dust`, async () => {
+      const w = makeWorld(variant);
+      const small = w.provider.addUtxo(w.contract.address, randomUtxo({ satoshis: MIN_STAMP_SATS }));
+      const { builder, fee } = buildSpend(w.contract, w.provider, small, w.stampKey, w.merchantLB);
+      expect(fee).toBeGreaterThanOrEqual(200n);
+      expect(fee).toBeLessThanOrEqual(400n);
+      expect(MIN_STAMP_SATS - fee).toBeGreaterThan(DUST_SATS * 10n);
+      await w.provider.sendRawTransaction(builder.build());
+    });
+  }
+
+  it('variant cov: a minimum stamp returns to the sponsor well above dust', async () => {
+    const w = makeWorld('cov');
+    const small = w.provider.addUtxo(w.contract.address, randomUtxo({ satoshis: MIN_STAMP_SATS }));
+    const { builder, fee } = buildReclaimCov(w.contract, w.provider, small, w.sponsorLB, EXPIRY);
+    expect(fee).toBeLessThan(300n); // no signature in the unlocking bytecode
+    expect(MIN_STAMP_SATS - fee).toBeGreaterThan(DUST_SATS * 10n);
+    await w.provider.sendRawTransaction(builder.build());
+  });
+
+  it('the fee cap leaves at least dust even for a stamp exactly at cap + dust', () => {
+    // If a stamp held only maxFee + 546, the worst allowed spend still pays the merchant 546 sats.
+    expect(DEFAULT_MAX_FEE + DUST_SATS).toBeLessThan(MIN_STAMP_SATS);
+  });
+
+  it('the library refuses to build a dust output (a stamp that tiny never reaches the node)', () => {
+    const w = makeWorld('cov');
+    expect(() =>
+      new TransactionBuilder({ provider: w.provider })
+        .addInput(w.utxo, w.contract.unlock.spend!(new SignatureTemplate(w.stampKey)))
+        .addOutput({ to: w.merchantLB, amount: DUST_SATS - 1n }),
+    ).toThrow(/output with 545 satoshis/);
   });
 });
 
