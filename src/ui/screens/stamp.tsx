@@ -144,9 +144,10 @@ export function StampScreen({ net, shop, amount, view, notice, more }: StampScre
             </span>
             {view.confirmed ? `Confirmed in block ${view.height}` : 'Received (0-conf) · confirming'}
           </div>
-          <TxLink net={net} txid={view.txid} label="View transaction" className="sp-link" />
+          {/* The amount in sats sits on the link: the explorer rounds a $0.02 stamp down to "0.00 BCH". */}
+          <TxLink net={net} txid={view.txid} label={view.received ? `View transaction · ${view.received}` : 'View transaction'} className="sp-link" />
           <a className="sp-counter" href={view.counterHref}>
-            {view.received ? `${view.received} received · ` : ''}Open the shop counter
+            Open the shop counter
           </a>
         </div>
       )}
