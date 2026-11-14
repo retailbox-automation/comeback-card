@@ -405,7 +405,7 @@ pre.sp-node { border-radius: 0 0 12px 12px; font-size: 18.5px; line-height: 1.42
 .cp-sponsor-pill { font-size: 19px; font-weight: 700; padding: 6px 16px; font-family: var(--mono); letter-spacing: -0.02em; }
 .cp-sep { width: 1px; height: 36px; background: #d6dade; }
 .cp-shop { display: flex; align-items: center; gap: 12px; font-size: 21px; font-weight: 700; letter-spacing: -0.015em; }
-.cp-grid { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 15px; margin-top: 22px; align-items: stretch; }
+.cp-grid { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 15px; margin-top: 22px; align-items: start; }
 .cp-card { border: 1px solid var(--line); border-radius: var(--radius); background: #ffffff; }
 .cp-stats { padding: 16px 10px 10px; }
 .cp-donut { position: relative; width: 272px; max-width: 100%; margin: 0 auto; }

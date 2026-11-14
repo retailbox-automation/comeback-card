@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { decodeCashAddress, generatePrivateKey } from '@bitauth/libauth';
 import '../src/ui/theme.css';
-import { Banner, CopyButton, Footer, Notice, QrReveal, TxLink, formatDate, formatDay, shortAddress } from '../src/ui/common';
+import { Banner, CopyButton, Footer, Notice, QrReveal, TxLink, formatDate, formatDay } from '../src/ui/common';
 import { NetworkRail } from '../src/ui/NetworkRail';
 import { CreateCard, CreateForm, CreatePreviewRows, HomeHero, HowItWorks, MyCampaigns, WalletLine } from '../src/ui/screens/home';
 import { DEMO_SHOP, NET, STAMP_VARIANT } from '../src/config';
@@ -400,7 +400,7 @@ function CreatedView({ c }: { c: Created }) {
         </a>
       </div>
       <p className="muted small">Saved in this browser only. Stamp links hold the stamp keys: share each one with one person.</p>
-      <WalletLine connected text={<>Stamps for {c.merchantName} · back to you after {formatDay(BigInt(c.expiry))}</>} right={<span className="muted small">{shortAddress(c.fundingTxid, 6, 6)}</span>} />
+      <WalletLine connected text={<>Stamps for {c.merchantName} · back to you after {formatDay(BigInt(c.expiry))}</>} />
     </div>
   );
 }

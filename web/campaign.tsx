@@ -5,7 +5,7 @@ import { createRoot } from 'react-dom/client';
 import { publicKeyToP2pkhCashAddress } from '@bitauth/libauth';
 import { TransactionBuilder, placeholderSignature } from 'cashscript';
 import '../src/ui/theme.css';
-import { Banner, Footer, Notice, TxLink, formatDate, shortAddress, usePoll } from '../src/ui/common';
+import { Banner, Footer, Notice, TxLink, formatDate, shopTitle, shortAddress, usePoll } from '../src/ui/common';
 import { CampaignScreen, type CampaignRowView } from '../src/ui/screens/campaign';
 import { DEMO_SHOP } from '../src/config';
 import { PREFIX, broadcastRaw, medianTimePast, provider, type ChainNet } from '../src/core/chain';
@@ -87,6 +87,7 @@ function CampaignView({ link }: { link: CampaignLink }) {
   const count = (k: StampState['kind']) => rows.filter((r) => r.state?.kind === k).length;
   const expiredByNetwork = mtp !== null && mtp >= link.expiry;
   const shopName = link.merchantName || 'the shop';
+  const shopShort = shopTitle(shopName);
 
   async function returnCov(r: Row) {
     setReturning(r.i);
@@ -141,7 +142,7 @@ function CampaignView({ link }: { link: CampaignLink }) {
     };
     switch (phase.phase) {
       case 'spent':
-        return { ...base, tone: 'spent', title: `${n} spent at ${shopName}`, pill: { label: conf(phase.confirmed), tone: phase.confirmed ? 'green' : 'outline' }, when: s && 'spend' in s ? block(s.spend) : null };
+        return { ...base, tone: 'spent', title: `${n} spent at ${shopShort}`, pill: { label: conf(phase.confirmed), tone: phase.confirmed ? 'green' : 'outline' }, when: s && 'spend' in s ? block(s.spend) : null };
       case 'returned':
         return { ...base, tone: 'returned', title: `${n} returned to the sponsor`, pill: { label: conf(phase.confirmed), tone: phase.confirmed ? 'grey' : 'outline' }, when: s && 'spend' in s ? block(s.spend) : null };
       case 'active':
