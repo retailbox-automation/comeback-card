@@ -5,6 +5,7 @@ import { decodeCashAddress, generatePrivateKey } from '@bitauth/libauth';
 import '../src/ui/theme.css';
 import { Banner, CopyButton, Footer, Notice, QrReveal, TxLink, formatDate, formatDay } from '../src/ui/common';
 import { NetworkRail } from '../src/ui/NetworkRail';
+import { counterHref } from '../src/ui/links';
 import { CreateCard, CreateForm, CreatePreviewRows, HomeHero, HowItWorks, MyCampaigns, WalletLine } from '../src/ui/screens/home';
 import { DEMO_SHOP, NET, STAMP_VARIANT } from '../src/config';
 import { PREFIX, broadcastRaw, provider } from '../src/core/chain';
@@ -25,6 +26,8 @@ type Created = {
   net: typeof NET;
   campaignName: string;
   merchantName: string;
+  /** Address of the shop the stamps pay (own shop or the demo shop). Older saved entries lack it. */
+  merchantAddress?: string;
   fundingTxid: string;
   campaignUrl: string;
   stampUrls: string[];
@@ -277,6 +280,7 @@ function Connected({ wallet, walletName }: { wallet: WizardWallet; walletName: s
         net: NET,
         campaignName: campaignName.trim().slice(0, 40) || 'My stamps',
         merchantName: terms.merchantName,
+        merchantAddress: shopCheck.address,
         fundingTxid: r.txid,
         campaignUrl: pageUrl('campaign.html', encodeCampaignLink({ ...terms, campaignName: campaignName.trim().slice(0, 40) || 'My stamps', stampPublicKeys: keys.map(publicKeyOf) })),
         stampUrls: keys.map((k) => pageUrl('stamp.html', encodeStampLink({ ...terms, stampPrivateKey: k }))),
@@ -392,7 +396,11 @@ function CreatedView({ c }: { c: Created }) {
         </a>
         <a
           className="btn btn-secondary"
-          href={`./shop.html#a=${encodeURIComponent(DEMO_SHOP.address[c.net])}&n=${encodeURIComponent(DEMO_SHOP.name)}`}
+          href={
+            c.merchantAddress
+              ? counterHref(c.merchantAddress, c.merchantName)
+              : counterHref(DEMO_SHOP.address[c.net], DEMO_SHOP.name)
+          }
           target="_blank"
           rel="noreferrer"
         >
