@@ -298,8 +298,8 @@ export function HowItWorks({ refuseId, yourStamps }: { refuseId: string; yourSta
             </li>
             <li>The page hands that transaction straight to a Bitcoin Cash node, with no check of its own first. The node answers in its own words:</li>
           </ol>
-          <pre className="node">mandatory-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation)</pre>
-          <p className="muted small">That is the answer a node gave on chipnet. On your stamp it comes live from the network, word for word.</p>
+          <pre className="node">mandatory-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation) (code 16)</pre>
+          <p className="muted small">That is the answer a mainnet node gave to a real $0.02 stamp on Nov 14, 2026. On your stamp it comes live from the network, word for word.</p>
           {yourStamps.length > 0 && (
             <div className="how-yours">
               <span className="muted small">Your latest stamps:</span>
