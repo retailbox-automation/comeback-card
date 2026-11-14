@@ -6,6 +6,7 @@ import '../src/ui/theme.css';
 import { Banner, CopyButton, Footer, Notice, QrReveal, TxLink, formatDate, formatDay } from '../src/ui/common';
 import { NetworkRail } from '../src/ui/NetworkRail';
 import { counterHref } from '../src/ui/links';
+import { TryRealStamps } from '../src/ui/TryRealStamps';
 import { CreateCard, CreateForm, CreatePreviewRows, HomeHero, HowItWorks, MyCampaigns, WalletLine } from '../src/ui/screens/home';
 import { DEMO_SHOP, NET, STAMP_VARIANT } from '../src/config';
 import { PREFIX, broadcastRaw, provider } from '../src/core/chain';
@@ -62,6 +63,7 @@ function App() {
       <Banner />
       <HomeHero net={NET} create={<Create />} preview={{ shopName: DEMO_SHOP.name, amount: '$0.25' }} refuseHref={`#${REFUSE_ID}`} />
       <NetworkRail amount="$0.25" shopName="Maple Street Coffee" refuseHref={`#${REFUSE_ID}`} />
+      <TryRealStamps net={NET} />
       <MyCampaigns
         list={mine.map((c) => ({
           key: c.fundingTxid,
