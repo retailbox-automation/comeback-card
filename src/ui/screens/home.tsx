@@ -78,6 +78,7 @@ export function PhoneMock({ children }: { children: ReactNode }) {
 export function StampPreview({ shopName, amount }: { shopName: string; amount: string }) {
   return (
     <div className="pv">
+      <span className="pv-badge">Preview</span>
       <StorefrontPhoto className="pv-photo" />
       <div className="pv-avatar">
         <Avatar name={shopName} size={88} tone="soft" />
