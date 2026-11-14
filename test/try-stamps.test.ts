@@ -6,7 +6,7 @@ const ok = {
   amountLabel: '$0.02',
   shopName: 'Maple Street Coffee (demo)',
   stamps: ['stamp.html#s1', 'stamp.html#s2'],
-  expired: 'stamp.html#e1',
+  expiredCampaign: 'campaign.html#e1',
   campaign: 'campaign.html#c1',
 };
 
@@ -21,11 +21,16 @@ describe('try-stamps.json', () => {
 
   it('keeps only links to our own stamp and campaign pages', () => {
     const r = parseTryStamps(
-      { ...ok, stamps: ['https://evil.example/#x', 'stamp.html#s2', 'javascript:alert(1)'], expired: 'https://x', campaign: 'stamp.html#no' },
+      {
+        ...ok,
+        stamps: ['https://evil.example/#x', 'stamp.html#s2', 'javascript:alert(1)'],
+        expiredCampaign: 'stamp.html#not-a-campaign',
+        campaign: 'https://x/campaign.html#c',
+      },
       'mainnet',
     );
     expect(r?.stamps).toEqual(['stamp.html#s2']);
-    expect(r?.expired).toBeUndefined();
+    expect(r?.expiredCampaign).toBeUndefined();
     expect(r?.campaign).toBeUndefined();
   });
 

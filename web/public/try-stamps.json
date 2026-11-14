@@ -1,0 +1,11 @@
+{
+  "net": "mainnet",
+  "amountLabel": "$0.02",
+  "shopName": "Maple Street Coffee (demo)",
+  "stamps": [
+    "stamp.html#AQABGXapFIgBO7Gd50rHtDKEQCB1bLctUvELiKwZdqkUUKUdaKIbPnQMt49h-k3g88qgJHSIrGsgYnIAAAfQGk1hcGxlIFN0cmVldCBDb2ZmZWUgKGRlbW8ptHdwXKj4Z1Dv2ilYI9ap6Z0bRHxjAub3mVvNNw1rilU",
+    "stamp.html#AQABGXapFIgBO7Gd50rHtDKEQCB1bLctUvELiKwZdqkUUKUdaKIbPnQMt49h-k3g88qgJHSIrGsgYnIAAAfQGk1hcGxlIFN0cmVldCBDb2ZmZWUgKGRlbW8p6Kyo6g2dXyaUTRbXZyUUh4w8vDuJlRwLLHO1qGzFlGE"
+  ],
+  "expiredCampaign": "campaign.html#AQABGXapFIgBO7Gd50rHtDKEQCB1bLctUvELiKwZdqkUUKUdaKIbPnQMt49h-k3g88qgJHSIrGr4uWMAAAfQGk1hcGxlIFN0cmVldCBDb2ZmZWUgKGRlbW8pCUxhc3Qgd2VlawEDYvLlTwPjHgggqJcVJt54s57Sv4MnkZz7IFjHN4kaG3w",
+  "campaign": "campaign.html#AQABGXapFIgBO7Gd50rHtDKEQCB1bLctUvELiKwZdqkUUKUdaKIbPnQMt49h-k3g88qgJHSIrGsgYnIAAAfQGk1hcGxlIFN0cmVldCBDb2ZmZWUgKGRlbW8pD05ld2NvbWVycyBOaWdodAMC-wQprAc4AtlKDipzWf8de7muaO7DE8tI256cZ6WSm-UCpRfctQ-RGpniwjUg6bLse1wBDhigdLFT_xTyc2eQY20DYvHxkiVXkwYy_4ukFQ2kPWsvgDKm5wJeidW7lMmLIaw"
+}

@@ -11,7 +11,8 @@ export type TryStamps = {
   amountLabel: string;
   shopName: string;
   stamps: string[];
-  expired?: string;
+  /** Campaign page of an expired stamp: its "Return to sponsor" needs no wallet. */
+  expiredCampaign?: string;
   campaign?: string;
 };
 
@@ -30,7 +31,7 @@ export function parseTryStamps(raw: unknown, net: ChainNet): TryStamps | null {
     amountLabel: r.amountLabel,
     shopName: r.shopName,
     stamps,
-    expired: isStamp(r.expired) ? r.expired : undefined,
+    expiredCampaign: isCampaign(r.expiredCampaign) ? r.expiredCampaign : undefined,
     campaign: isCampaign(r.campaign) ? r.campaign : undefined,
   };
 }
@@ -63,20 +64,20 @@ export function TryRealStamps({ net }: { net: ChainNet }) {
               Stamp {i + 1} · {data.amountLabel}
             </a>
           ))}
-          {data.expired && (
-            <a className="btn btn-secondary try-btn" href={data.expired} target="_blank" rel="noreferrer">
-              Expired stamp
+          {data.expiredCampaign && (
+            <a className="btn btn-secondary try-btn" href={data.expiredCampaign} target="_blank" rel="noreferrer">
+              Return an expired stamp
             </a>
           )}
           {data.campaign && (
             <a className="btn btn-secondary try-btn" href={data.campaign} target="_blank" rel="noreferrer">
-              Their campaign
+              Campaign page
             </a>
           )}
         </div>
         <p className="muted small">
           First come: if a stamp shows spent, create your own stamps with the form above.
-          {data.expired ? ' The expired stamp shows the other way out: press Return and it goes back to the sponsor.' : ''}
+          {data.expiredCampaign ? ' The expired stamp shows the other way out: on its page press Return to sponsor, no wallet needed.' : ''}
         </p>
       </div>
     </section>
