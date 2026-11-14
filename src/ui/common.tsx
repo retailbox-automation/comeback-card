@@ -226,9 +226,9 @@ export function Sticker({ txid, shop }: { txid: string; shop: string }) {
           <ellipse cx="120" cy="78" rx="32" ry="6.5" fill="#b9773e" stroke="#2c6a4d" strokeWidth="2.4" />
           <path d="M120 81.5c-4.5-2.7-7.5-4.6-5.8-6.4s4.8 0 5.8 1.9c1-1.9 4.1-3.7 5.8-1.9s-1.3 3.7-5.8 6.4Z" fill="#f6e6cf" />
         </g>
-        <text x="120" y="161" textAnchor="middle" fontSize="26" fontWeight="800" fill="#1f5e43">First</text>
-        <text x="120" y="187" textAnchor="middle" fontSize="26" fontWeight="800" fill="#1f5e43">Purchase</text>
-        <text x="120" y="205" textAnchor="middle" fontSize="10.5" fontFamily="ui-monospace, Menlo, monospace" fill="#6b5a3e">
+        <text x="120" y="158" textAnchor="middle" fontSize="26" fontWeight="800" fill="#1f5e43">First</text>
+        <text x="120" y="184" textAnchor="middle" fontSize="26" fontWeight="800" fill="#1f5e43">Purchase</text>
+        <text x="120" y="200" textAnchor="middle" fontSize="10" fontFamily="ui-monospace, Menlo, monospace" fill="#6b5a3e">
           #{txid.slice(0, 8)}
         </text>
       </svg>

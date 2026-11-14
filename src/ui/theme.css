@@ -305,9 +305,10 @@ footer { max-width: 1340px; margin: 32px auto 0; padding: 0 16px 40px; color: va
   .create-row + .create-row::before, .create-own + .create-row::before { left: 58px; }
   .create-own { padding-left: 58px; }
   .create-tile { width: 44px; height: 44px; }
-  .create-value { font-size: 17.5px; }
+  .create-value { font-size: 16.5px; }
   .btn-create { height: 54px; font-size: 20px; }
-  .create-foot { font-size: 15px; }
+  .create-foot { font-size: 14px; gap: 8px; }
+  .wallet-balance { font-size: 12.5px; }
   .create-links { grid-template-columns: minmax(0, 1fr); }
   .hero-phone { height: 640px; }
   .hero-phone .phone { transform: scale(0.74); }
@@ -323,9 +324,8 @@ footer { max-width: 1340px; margin: 32px auto 0; padding: 0 16px 40px; color: va
    ===================================================================================================== */
 .stamp-page { background: var(--bg); }
 .sp { max-width: 430px; margin: 0 auto; background: #ffffff; }
-.sp-screen { display: flex; flex-direction: column; min-height: var(--sp-min, calc(100svh - 60px)); }
+.sp-screen { display: flex; flex-direction: column; min-height: var(--sp-min, calc(100svh - 72px)); }
 .sp-screen > .sp-sheet:not(.sp-sheet-up) { margin-top: auto; }
-.sp-body { padding-bottom: 34px !important; }
 .sp-head { display: flex; align-items: center; justify-content: space-between; height: 62px; padding: 0 22px; border-bottom: 1px solid #e8eaed; }
 .sp-brand { font-size: 25px; font-weight: 700; color: #16181b; text-decoration: none; letter-spacing: -0.02em; }
 .sp-hero { position: relative; }
@@ -340,7 +340,7 @@ footer { max-width: 1340px; margin: 32px auto 0; padding: 0 16px 40px; color: va
 .sp-shop-name { font-size: 26.5px; font-weight: 700; letter-spacing: -0.025em; line-height: 1.15; }
 .sp-shop-sub { font-size: 18px; color: #3e4850; margin-top: 3px; }
 .sp-hero.dim .sp-shop-sub { color: #1f262c; }
-.sp-body { text-align: center; padding: 0 22px; }
+.sp-body { text-align: center; padding: 0 22px 34px; }
 .sp-from { border-top: 1px solid var(--line); margin-top: 22px; padding-top: 18px; font-size: 17px; color: #333b42; }
 .sp-amount { font-size: 112px; font-weight: 800; letter-spacing: -0.05em; line-height: 1; margin-top: 16px; color: #15171a; }
 .sp-caption { font-size: 21px; color: #2d353c; margin-top: 24px; letter-spacing: -0.005em; }
@@ -405,7 +405,7 @@ pre.sp-node { border-radius: 0 0 12px 12px; font-size: 18.5px; line-height: 1.42
 .cp-sponsor-pill { font-size: 19px; font-weight: 700; padding: 6px 16px; font-family: var(--mono); letter-spacing: -0.02em; }
 .cp-sep { width: 1px; height: 36px; background: #d6dade; }
 .cp-shop { display: flex; align-items: center; gap: 12px; font-size: 21px; font-weight: 700; letter-spacing: -0.015em; }
-.cp-grid { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 15px; margin-top: 22px; align-items: start; }
+.cp-grid { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 15px; margin-top: 22px; align-items: stretch; }
 .cp-card { border: 1px solid var(--line); border-radius: var(--radius); background: #ffffff; }
 .cp-stats { padding: 16px 10px 10px; }
 .cp-donut { position: relative; width: 272px; max-width: 100%; margin: 0 auto; }
@@ -510,4 +510,6 @@ pre.sp-node { border-radius: 0 0 12px 12px; font-size: 18.5px; line-height: 1.42
   .counter-page { background: #ffffff; }
   .ct { border-radius: 0; box-shadow: none; padding: 14px 16px 18px; }
   .ct-amount { font-size: 96px; }
+  .ct-list li { grid-template-columns: 30px minmax(0, 1fr) auto auto; gap: 10px; }
+  .ct-what { font-size: 14.5px; }
 }
