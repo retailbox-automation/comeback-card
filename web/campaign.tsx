@@ -5,7 +5,9 @@ import { createRoot } from 'react-dom/client';
 import { publicKeyToP2pkhCashAddress } from '@bitauth/libauth';
 import { TransactionBuilder, placeholderSignature } from 'cashscript';
 import '../src/ui/theme.css';
-import { Banner, Footer, Header, Notice, TxLink, formatDate, usePoll } from '../src/ui/common';
+import { Banner, Footer, Notice, TxLink, formatDate, shortAddress, usePoll } from '../src/ui/common';
+import { CampaignScreen, type CampaignRowView } from '../src/ui/screens/campaign';
+import { DEMO_SHOP } from '../src/config';
 import { PREFIX, broadcastRaw, medianTimePast, provider, type ChainNet } from '../src/core/chain';
 import { decodeCampaignLink, termsFor, type CampaignLink } from '../src/core/link';
 import { addressOf, buildReclaimCov, lockingBytecodeOf, stampContract } from '../src/core/stamp';
@@ -28,13 +30,19 @@ function App() {
   const parsed = useMemo(parse, []);
   if (!parsed.ok) {
     return (
-      <>
+      <div className="campaign-page">
         <Banner />
-        <div className="wrap">
-          <Header net="mainnet" />
-          <Notice kind="bad">{parsed.error}</Notice>
-        </div>
-      </>
+        <main>
+          <div className="cp">
+            <header className="cp-head">
+              <a className="cp-brand" href="./">First Purchase</a>
+            </header>
+            <div className="cp-body">
+              <Notice kind="bad">{parsed.error}</Notice>
+            </div>
+          </div>
+        </main>
+      </div>
     );
   }
   return <CampaignView link={parsed.link} />;
@@ -78,6 +86,7 @@ function CampaignView({ link }: { link: CampaignLink }) {
 
   const count = (k: StampState['kind']) => rows.filter((r) => r.state?.kind === k).length;
   const expiredByNetwork = mtp !== null && mtp >= link.expiry;
+  const shopName = link.merchantName || 'the shop';
 
   async function returnCov(r: Row) {
     setReturning(r.i);
@@ -103,153 +112,109 @@ function CampaignView({ link }: { link: CampaignLink }) {
     }
   }
 
-  return (
-    <>
-      <Banner />
-      <div className="wrap">
-        <Header net={net} />
-        <h1>Campaign: {link.campaignName}</h1>
-        <p className="lead">
-          {link.stampPublicKeys.length} stamp{link.stampPublicKeys.length > 1 ? 's' : ''} for {link.merchantName}. Unspent stamps can go back to the
-          sponsor after {formatDate(link.expiry)}.
-        </p>
-        <div className="stats">
-          <div className="stat spent">
-            Spent at the shop<b>{count('spent')}</b>
-          </div>
-          <div className="stat">
-            Returned to sponsor<b>{count('returned')}</b>
-          </div>
-          <div className="stat">
-            Waiting<b>{count('waiting')}</b>
-          </div>
-        </div>
-        {error && <Notice kind="warn">{error}</Notice>}
-        {expiredByNetwork && count('waiting') > 0 && (
-          <Notice kind="warn">
-            These stamps have expired. Each one goes back to the sponsor once anyone presses “Return”. Until then it can still be spent at the shop:
-            the network keeps whichever transaction it sees first.
+  const rowViews: CampaignRowView[] = rows.map((r): CampaignRowView => {
+    const s = r.state;
+    const phase = stampPhase(s, mtp, link.expiry);
+    const sats = s && 'satoshis' in s ? s.satoshis : s && 'paidSatoshis' in s ? s.paidSatoshis : null;
+    const usd = sats !== null ? formatUsd(sats, rate) : null;
+    const conf = (c: boolean) => (c ? 'confirmed' : '0-conf');
+    const block = (seen: { confirmed: boolean; height: number }) => (seen.confirmed ? `block ${seen.height.toLocaleString('en-US')}` : 'no block yet');
+    const n = `Stamp #${r.i + 1}`;
+    const result = results[r.i];
+    const base = {
+      key: String(r.i),
+      amount: sats === null ? null : usd ?? formatSats(sats),
+      amountTitle: sats === null ? undefined : formatSats(sats),
+      tx: s && 'spend' in s ? { txid: s.spend.txid, label: 'view' } : s && 'funding' in s ? { txid: s.funding.txid, label: 'view' } : null,
+      result: result ? (
+        result.ok ? (
+          <Notice kind="ok">
+            Returned {formatSats(result.sats)} to the sponsor, <span className="addr">{sponsorAddress}</span>. <TxLink net={net} txid={result.txid} />
           </Notice>
-        )}
+        ) : (
+          <Notice kind={explainNodeError(result.verbatim ?? '').cls === 'already-gone' ? 'warn' : 'bad'}>
+            {result.plain}
+            {result.verbatim && <pre className="node">{result.verbatim}</pre>}
+          </Notice>
+        )
+      ) : undefined,
+    };
+    switch (phase.phase) {
+      case 'spent':
+        return { ...base, tone: 'spent', title: `${n} spent at ${shopName}`, pill: { label: conf(phase.confirmed), tone: phase.confirmed ? 'green' : 'outline' }, when: s && 'spend' in s ? block(s.spend) : null };
+      case 'returned':
+        return { ...base, tone: 'returned', title: `${n} returned to the sponsor`, pill: { label: conf(phase.confirmed), tone: phase.confirmed ? 'grey' : 'outline' }, when: s && 'spend' in s ? block(s.spend) : null };
+      case 'active':
+        return { ...base, tone: 'waiting', title: `${n} is waiting to be spent`, pill: { label: 'waiting', tone: 'amber' }, when: s && 'funding' in s ? block(s.funding) : null };
+      case 'expired-open':
+        return {
+          ...base,
+          tone: 'expired',
+          title: `${n} expired, not yet returned`,
+          pill: { label: 'expired', tone: 'amber' },
+          when: s && 'funding' in s ? block(s.funding) : null,
+          action:
+            link.variant === 'cov' && !result?.ok ? (
+              <button type="button" className="btn btn-primary" onClick={() => returnCov(r)} disabled={returning === r.i}>
+                {returning === r.i ? 'Returning…' : 'Return to sponsor'}
+              </button>
+            ) : undefined,
+        };
+      case 'not-funded':
+        return { ...base, tone: 'pending', title: `${n} not funded yet`, pill: { label: 'not funded', tone: 'outline' }, when: null };
+      case 'other':
+        return { ...base, tone: 'bad', title: `${n} moved elsewhere`, pill: { label: 'moved', tone: 'red' }, when: null };
+      case 'loading':
+      default:
+        return { ...base, tone: 'pending', title: `${n} checking…`, pill: { label: 'checking', tone: 'outline' }, when: null };
+    }
+  });
 
-        <div className="card">
-          <table>
-            <thead>
-              <tr>
-                <th>Stamp</th>
-                <th>Status</th>
-                <th>Amount</th>
-                <th>Transaction</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <StampRow
-                  key={r.i}
-                  r={r}
-                  net={net}
-                  rate={rate}
-                  mtp={mtp}
-                  expiry={link.expiry}
-                  variant={link.variant}
-                  returning={returning === r.i}
-                  onReturn={() => returnCov(r)}
-                  result={results[r.i]}
-                  sponsorAddress={sponsorAddress}
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {link.variant === 'sig' && expiredByNetwork && count('waiting') > 0 && (
-          <SponsorSignReturn link={link} rows={rows} net={net} sponsorAddress={sponsorAddress} />
-        )}
-
-        <div className="card">
-          <h2>What these numbers mean</h2>
-          <p className="muted">
-            “Spent at the shop” counts stamps whose coins went to the shop’s address <span className="addr">{shopAddress}</span>, each with a link to its
-            transaction. It does not prove a purchase: a shop could open stamp links and spend them itself, the same risk as a paper coupon.
-          </p>
-          <p className="muted small">
-            Sponsor address (where returns go): <span className="addr">{sponsorAddress}</span>. Statuses are read live from public Bitcoin Cash nodes; this
-            page stores nothing.
-          </p>
-        </div>
-        <Footer />
-      </div>
-    </>
-  );
-}
-
-function StampRow({
-  r,
-  net,
-  rate,
-  mtp,
-  expiry,
-  variant,
-  returning,
-  onReturn,
-  result,
-  sponsorAddress,
-}: {
-  r: Row;
-  net: ChainNet;
-  rate: number | null;
-  mtp: bigint | null;
-  expiry: bigint;
-  variant: 'sig' | 'cov';
-  returning: boolean;
-  onReturn: () => void;
-  result: ReturnResult | undefined;
-  sponsorAddress: string;
-}) {
-  const s = r.state;
-  const phase = stampPhase(s, mtp, expiry);
-  const amount = s && 'satoshis' in s ? s.satoshis : s && 'paidSatoshis' in s ? s.paidSatoshis : null;
-  const conf = (c: boolean) => (c ? 'confirmed' : '0-conf');
   return (
-    <>
-      <tr>
-        <td>#{r.i + 1}</td>
-        <td>
-          {phase.phase === 'loading' && <span className="pill zero">checking…</span>}
-          {phase.phase === 'not-funded' && <span className="pill zero">not funded yet</span>}
-          {phase.phase === 'active' && <span className="pill waiting">waiting</span>}
-          {phase.phase === 'expired-open' && <span className="pill waiting">expired · not yet returned</span>}
-          {phase.phase === 'spent' && <span className="pill spent">spent at the shop · {conf(phase.confirmed)}</span>}
-          {phase.phase === 'returned' && <span className="pill returned">returned · {conf(phase.confirmed)}</span>}
-          {phase.phase === 'other' && <span className="pill bad">moved elsewhere</span>}
-        </td>
-        <td>{amount !== null ? <>{formatSats(amount)}{rate ? <div className="muted small">{formatUsd(amount, rate)}</div> : null}</> : '…'}</td>
-        <td>
-          {s && 'spend' in s ? <TxLink net={net} txid={s.spend.txid} /> : s && 'funding' in s ? <TxLink net={net} txid={s.funding.txid} label="funding" /> : null}
-          {phase.phase === 'expired-open' && variant === 'cov' && !result?.ok && (
-            <div style={{ marginTop: 6 }}>
-              <button className="inline" onClick={onReturn} disabled={returning}>{returning ? 'Returning…' : 'Return to sponsor'}</button>
-            </div>
-          )}
-        </td>
-      </tr>
-      {result && (
-        <tr>
-          <td colSpan={4}>
-            {result.ok ? (
-              <Notice kind="ok">
-                Returned {formatSats(result.sats)} to the sponsor, <span className="addr">{sponsorAddress}</span>. <TxLink net={net} txid={result.txid} />
-              </Notice>
-            ) : (
-              <Notice kind={explainNodeError(result.verbatim ?? '').cls === 'already-gone' ? 'warn' : 'bad'}>
-                {result.plain}
-                {result.verbatim && <pre className="node">{result.verbatim}</pre>}
-              </Notice>
-            )}
-          </td>
-        </tr>
-      )}
-    </>
+    <div className="campaign-page">
+      <Banner />
+      <main>
+        <CampaignScreen
+          net={net}
+          name={link.campaignName}
+          sponsor={{ label: shortAddress(sponsorAddress, 5, 5).replace(/^[a-z]+:/, ''), title: sponsorAddress }}
+          shopName={shopName}
+          showPhoto={shopAddress === DEMO_SHOP.address[net]}
+          counts={{ spent: count('spent'), returned: count('returned'), waiting: count('waiting'), total: rows.length }}
+          rows={rowViews}
+          notices={
+            <>
+              {error && <Notice kind="warn">{error}</Notice>}
+              {expiredByNetwork && count('waiting') > 0 && (
+                <Notice kind="warn">
+                  These stamps have expired. Each one goes back to the sponsor once anyone presses “Return”. Until then it can still be spent at the shop: the
+                  network keeps whichever transaction it sees first.
+                </Notice>
+              )}
+            </>
+          }
+          footnote="Counts stamps spent at the shop’s address. A shop could spend stamps itself — same risk as a paper coupon."
+          below={
+            <>
+              {link.variant === 'sig' && expiredByNetwork && count('waiting') > 0 && (
+                <SponsorSignReturn link={link} rows={rows} net={net} sponsorAddress={sponsorAddress} />
+              )}
+              <div className="cp-more">
+                <p>
+                  “Spent at the shop” counts stamps whose coins went to the shop’s address <span className="addr">{shopAddress}</span>, each with a link to its
+                  transaction. It does not prove a purchase. Unspent stamps can go back to the sponsor after {formatDate(link.expiry)}.
+                </p>
+                <p>
+                  Sponsor address (where returns go): <span className="addr">{sponsorAddress}</span>. Statuses are read live from public Bitcoin Cash nodes; this
+                  page stores nothing.
+                </p>
+              </div>
+            </>
+          }
+        />
+      </main>
+      <Footer />
+    </div>
   );
 }
 
@@ -283,16 +248,20 @@ function SponsorSignReturn({ link, rows, net, sponsorAddress }: { link: Campaign
   }
 
   return (
-    <div className="card">
-      <h2>Return expired stamps (sponsor signs)</h2>
+    <div className="cp-card" style={{ padding: 18, margin: '14px 10px 0' }}>
+      <h2 style={{ fontSize: 20, margin: '0 0 8px' }}>Return expired stamps (sponsor signs)</h2>
       <p className="muted small">
-        Your wallet will ask you to sign each return. Some wallets (Selene) show only the network fee as the amount, about 300 sats, not the stamp
-        coming back: that is expected.
+        Your wallet will ask you to sign each return. Some wallets (Selene) show only the network fee as the amount, about 300 sats, not the stamp coming back:
+        that is expected.
       </p>
       {ws.kind !== 'connected' ? (
-        <button onClick={() => wallet.start()}>Connect the sponsor wallet</button>
+        <button type="button" className="btn btn-primary" onClick={() => wallet.start()}>
+          Connect the sponsor wallet
+        </button>
       ) : (
-        <button onClick={returnAll}>Return all expired stamps</button>
+        <button type="button" className="btn btn-primary" onClick={returnAll}>
+          Return all expired stamps
+        </button>
       )}
       {ws.kind === 'pairing' && <p className="addr small">{ws.uri}</p>}
       {log.map((l) => (

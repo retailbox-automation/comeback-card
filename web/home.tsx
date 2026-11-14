@@ -3,7 +3,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { decodeCashAddress, generatePrivateKey } from '@bitauth/libauth';
 import '../src/ui/theme.css';
-import { Banner, CopyButton, Footer, Header, Notice, Qr, TxLink, formatDate } from '../src/ui/common';
+import { Banner, CopyButton, Footer, Notice, QrReveal, TxLink, formatDate, formatDay, shortAddress } from '../src/ui/common';
+import { NetworkRail } from '../src/ui/NetworkRail';
+import { CreateCard, CreateForm, CreatePreviewRows, HomeHero, HowItWorks, MyCampaigns, WalletLine } from '../src/ui/screens/home';
 import { DEMO_SHOP, NET, STAMP_VARIANT } from '../src/config';
 import { PREFIX, broadcastRaw, provider } from '../src/core/chain';
 import { WizardWallet, type WalletState } from '../src/core/wallet';
@@ -15,6 +17,8 @@ import { explainNodeError } from '../src/core/view';
 
 const SCAN_DEPTH = 20;
 const STORE = 'first-purchase-campaigns-v1';
+const REFUSE_ID = 'refuse';
+const DAY_CHOICES = [1, 7, 30];
 
 type Created = {
   createdAt: number;
@@ -45,28 +49,27 @@ function saveCreated(c: Created) {
 }
 
 const pageUrl = (page: string, fragment: string) => new URL(`./${page}#${fragment}`, location.href).toString();
+const dayFromNow = (days: number) => formatDay(BigInt(Math.floor(Date.now() / 1000) + days * 86400));
 
 function App() {
+  const mine = useMemo(loadCreated, []);
+  const latest = mine[0];
   return (
-    <>
+    <div className="home">
       <Banner />
-      <div className="wrap">
-        <Header net={NET} />
-        <h1>A $0.25 stamp that can only be spent at one shop.</h1>
-        <p className="lead">
-          Hand out Bitcoin Cash that turns into a first purchase. Each stamp is a tiny contract: it pays one shop, or goes back to you after
-          the date you pick. The person who gets it needs no wallet.
-        </p>
-        <Notice kind="ok">
-          Gift links elsewhere hand out coins that can go anywhere. These are locked to one shop <strong>inside the coin itself</strong>, with
-          no server holding them. Open a stamp and press “Try to send it anywhere else”: the network refuses.
-        </Notice>
-        <Create />
-        <MyCampaigns />
-        <HowItWorks />
-        <Footer />
-      </div>
-    </>
+      <HomeHero net={NET} create={<Create />} preview={{ shopName: DEMO_SHOP.name, amount: '$0.25' }} refuseHref={`#${REFUSE_ID}`} />
+      <NetworkRail amount="$0.25" shopName="Maple Street Coffee" refuseHref={`#${REFUSE_ID}`} />
+      <MyCampaigns
+        list={mine.map((c) => ({
+          key: c.fundingTxid,
+          name: c.campaignName,
+          detail: `${c.stampUrls.length} × ${formatSats(BigInt(c.satsPerStamp))} · ${c.merchantName}`,
+          href: c.campaignUrl,
+        }))}
+      />
+      <HowItWorks refuseId={REFUSE_ID} yourStamps={latest ? latest.stampUrls.map((href, i) => ({ label: `Stamp ${i + 1}`, href })) : []} />
+      <Footer />
+    </div>
   );
 }
 
@@ -85,43 +88,72 @@ function Create() {
   }
   const wallet = walletRef.current;
   useEffect(() => () => wallet.stop(), [wallet]);
+  const notConnectedFoot = <WalletLine connected={false} text="WizardConnect: Selene (2026.10 or newer), Cashonize or Paytaca" />;
+
+  if (ws.kind === 'connected') {
+    return (
+      <CreateCard>
+        <Connected wallet={wallet} walletName={ws.walletName} />
+      </CreateCard>
+    );
+  }
 
   return (
-    <div className="card" id="create">
-      <h2>Create stamps</h2>
+    <CreateCard>
       {ws.kind === 'idle' && (
         <>
-          <p className="muted">Connect a Bitcoin Cash wallet that speaks WizardConnect: Selene (2026.10 or newer), Cashonize or Paytaca.</p>
-          <button onClick={() => wallet.start()}>Connect wallet</button>
+          <CreatePreviewRows shopName={DEMO_SHOP.name} expiryDay={dayFromNow(7)} />
+          <button type="button" className="btn btn-primary btn-create" onClick={() => wallet.start()}>
+            Connect wallet
+          </button>
+          {notConnectedFoot}
         </>
       )}
       {ws.kind === 'pairing' && (
-        <>
-          <p>Scan this code with your wallet’s WizardConnect scanner, or copy the link into the wallet.</p>
-          <Qr text={ws.qrUri} />
-          <div className="row">
+        <div className="create-panel">
+          <p>Scan the code with your wallet’s WizardConnect scanner, or copy the link into the wallet.</p>
+          <div className="create-actions">
             <CopyButton text={ws.uri} label="Copy pairing link" />
-            <button className="secondary inline" onClick={() => wallet.stop()}>Cancel</button>
+            <QrReveal text={ws.qrUri} label="Show QR code" warning="Do not show this code on a stream: whoever scans it first gets the session." />
+            <button type="button" className="btn-mini" onClick={() => wallet.stop()}>
+              Cancel
+            </button>
           </div>
-          <p className="muted small">{ws.relayUp ? 'Waiting for your wallet…' : 'Opening a secure channel…'} Do not show this code on a stream: whoever scans it first gets the session.</p>
-        </>
+          <p className="muted small">{ws.relayUp ? 'Waiting for your wallet…' : 'Opening a secure channel…'}</p>
+          {notConnectedFoot}
+        </div>
       )}
       {ws.kind === 'relay-down' && (
-        <>
+        <div className="create-panel">
           <Notice kind="warn">{ws.message}</Notice>
-          <button onClick={() => wallet.start()}>Try again</button>
-        </>
+          <button type="button" className="btn btn-primary btn-create" onClick={() => wallet.start()}>
+            Try again
+          </button>
+          {notConnectedFoot}
+        </div>
       )}
-      {ws.kind === 'awaiting-approval' && <Notice kind="info">Approve the connection in {ws.walletName ?? 'your wallet'}.</Notice>}
-      {ws.kind === 'reconnecting' && <Notice kind="info">The connection dropped for a moment. Reconnecting…</Notice>}
+      {ws.kind === 'awaiting-approval' && (
+        <div className="create-panel">
+          <Notice kind="info">Approve the connection in {ws.walletName ?? 'your wallet'}.</Notice>
+          {notConnectedFoot}
+        </div>
+      )}
+      {ws.kind === 'reconnecting' && (
+        <div className="create-panel">
+          <Notice kind="info">The connection dropped for a moment. Reconnecting…</Notice>
+          {notConnectedFoot}
+        </div>
+      )}
       {ws.kind === 'disconnected' && (
-        <>
+        <div className="create-panel">
           <Notice kind="warn">The wallet disconnected{ws.message ? `: ${ws.message}` : ''}.</Notice>
-          <button onClick={() => wallet.start()}>Connect again</button>
-        </>
+          <button type="button" className="btn btn-primary btn-create" onClick={() => wallet.start()}>
+            Connect again
+          </button>
+          {notConnectedFoot}
+        </div>
       )}
-      {ws.kind === 'connected' && <Connected wallet={wallet} walletName={ws.walletName} />}
-    </div>
+    </CreateCard>
   );
 }
 
@@ -174,13 +206,15 @@ function Connected({ wallet, walletName }: { wallet: WizardWallet; walletName: s
 
   if (walletNet !== NET) {
     return (
-      <>
+      <div className="create-panel">
         <Notice kind="bad">
-          {walletName ?? 'Your wallet'} is on {walletNet === 'unknown' ? 'an unknown network' : walletNet}. This site runs on {NET}. Switch the
-          wallet’s network, then connect again.
+          {walletName ?? 'Your wallet'} is on {walletNet === 'unknown' ? 'an unknown network' : walletNet}. This site runs on {NET}. Switch the wallet’s
+          network, then connect again.
         </Notice>
-        <button onClick={() => wallet.start()}>Connect again</button>
-      </>
+        <button type="button" className="btn btn-primary btn-create" onClick={() => wallet.start()}>
+          Connect again
+        </button>
+      </div>
     );
   }
 
@@ -264,185 +298,109 @@ function Connected({ wallet, walletName }: { wallet: WizardWallet; walletName: s
 
   if (created) return <CreatedView c={created} />;
 
+  const priceNote = rate ? ` at $${rate.toFixed(2)}/BCH` : rate === undefined ? ' (loading the BCH price…)' : ' (price service unavailable, using a fixed amount)';
   return (
-    <>
-      <Notice kind="ok">
-        Connected: {walletName ?? 'wallet'} · {NET} · balance {balance === null ? '…' : `${formatSats(balance)}${rate ? ` (${formatUsd(balance, rate)})` : ''}`}{' '}
-        <button className="secondary inline" onClick={scan}>Refresh</button>
-      </Notice>
-      {scanError && <Notice kind="warn">{scanError}</Notice>}
-      {balance !== null && balance < total + 2_000n && (
-        <Notice kind="warn">
-          Not enough coins for {count} stamp{count > 1 ? 's' : ''}. {NET === 'chipnet' ? 'Get free test coins at tbch.googol.cash, then press Refresh.' : 'Add a little BCH, then press Refresh.'}
-        </Notice>
-      )}
-
-      <label>Shop</label>
-      <div className="choices">
-        <label>
-          <input type="radio" checked={shopMode === 'demo'} onChange={() => setShopMode('demo')} />
-          {DEMO_SHOP.name}
-        </label>
-        <label>
-          <input type="radio" checked={shopMode === 'own'} onChange={() => setShopMode('own')} />
-          My own shop address
-        </label>
-      </div>
-      {shopMode === 'own' && (
+    <CreateForm
+      shopMode={shopMode}
+      onShopMode={setShopMode}
+      demoShopName={DEMO_SHOP.name}
+      ownShop={ownShop}
+      onOwnShop={setOwnShop}
+      ownShopName={ownShopName}
+      onOwnShopName={setOwnShopName}
+      ownShopError={!shopCheck.ok && shopAddressInput ? shopCheck.why : null}
+      addressPlaceholder={`${PREFIX[NET]}:q…`}
+      usd={usd}
+      usdOptions={[0.25, 0.5, 1]}
+      onUsd={setUsd}
+      usdDisabled={!rate}
+      count={count}
+      countOptions={[1, 2, 3, 4, 5, 10]}
+      onCount={setCount}
+      days={days}
+      dayOptions={DAY_CHOICES.map((d) => ({ days: d, label: dayFromNow(d) }))}
+      onDays={setDays}
+      campaignName={campaignName}
+      onCampaignName={setCampaignName}
+      notices={
         <>
-          <input type="text" placeholder={`${PREFIX[NET]}:q…`} value={ownShop} onChange={(e) => setOwnShop(e.target.value)} spellCheck={false} autoComplete="off" />
-          <div style={{ height: 8 }} />
-          <input type="text" placeholder="Shop name (shown on the stamp)" value={ownShopName} maxLength={40} onChange={(e) => setOwnShopName(e.target.value)} />
-          {!shopCheck.ok && shopAddressInput && <Notice kind="warn">{shopCheck.why}</Notice>}
+          {scanError && <Notice kind="warn">{scanError}</Notice>}
+          {balance !== null && balance < total + 2_000n && (
+            <Notice kind="warn">
+              Not enough coins for {count} stamp{count > 1 ? 's' : ''}.{' '}
+              {NET === 'chipnet' ? 'Get free test coins at tbch.googol.cash, then press ↻ next to the balance.' : 'Add a little BCH, then press ↻ next to the balance.'}
+            </Notice>
+          )}
         </>
-      )}
-
-      <label>Amount per stamp</label>
-      <div className="choices">
-        {[0.25, 0.5, 1].map((v) => (
-          <label key={v}>
-            <input type="radio" checked={usd === v} onChange={() => setUsd(v)} disabled={!rate} />${v.toFixed(2)}
-          </label>
-        ))}
-      </div>
-      <p className="muted small">
-        = {formatSats(satsPerStamp)} per stamp
-        {rate ? ` at $${rate.toFixed(2)}/BCH` : rate === undefined ? ' (loading the BCH price…)' : ' (price service unavailable, using a fixed amount)'}
-        {NET === 'chipnet' ? '. Test coins have no value.' : '.'}
-      </p>
-
-      <div className="row">
-        <div>
-          <label htmlFor="count">How many</label>
-          <select id="count" value={count} onChange={(e) => setCount(Number(e.target.value))}>
-            {[1, 2, 3, 4, 5, 10].map((n) => (
-              <option key={n} value={n}>{n}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label htmlFor="days">Unspent stamps come back to you after</label>
-          <select id="days" value={days} onChange={(e) => setDays(Number(e.target.value))}>
-            <option value={1}>1 day</option>
-            <option value={7}>7 days</option>
-            <option value={30}>30 days</option>
-          </select>
-        </div>
-      </div>
-      <label htmlFor="cname">Campaign name</label>
-      <input id="cname" type="text" value={campaignName} maxLength={40} onChange={(e) => setCampaignName(e.target.value)} />
-
-      <p className="muted small" style={{ marginTop: 12 }}>
-        One transaction on Bitcoin Cash {NET}. Locks {formatSats(total)} into {count} stamp contract{count > 1 ? 's' : ''} for{' '}
-        {shopCheck.ok ? shopCheck.name : 'the shop'}. Network fee about $0.001. Anything not spent by {formatDate(expiry)} can only go back to{' '}
-        <span className="addr">{sponsorAddress}</span>.
-      </p>
-      <button onClick={create} disabled={!canCreate}>
-        {busy ?? `Create ${count} stamp${count > 1 ? 's' : ''}`}
-      </button>
-      {error && (
-        <Notice kind="bad">
-          {error.plain}
-          {error.verbatim && <pre className="node">{error.verbatim}</pre>}
-        </Notice>
-      )}
-    </>
+      }
+      buttonLabel={busy ?? `Create ${count} stamp${count > 1 ? 's' : ''}`}
+      canCreate={canCreate}
+      onCreate={create}
+      details={
+        <>
+          One transaction on Bitcoin Cash {NET}, network fee about $0.001. Locks {formatSats(total)} into {count} stamp contract{count > 1 ? 's' : ''} for{' '}
+          {shopCheck.ok ? shopCheck.name : 'the shop'} ({formatSats(satsPerStamp)} each{priceNote}
+          {NET === 'chipnet' ? '; test coins have no value' : ''}). Anything not spent by {formatDate(expiry)} can only go back to{' '}
+          <span className="addr">{sponsorAddress}</span>.
+        </>
+      }
+      error={
+        error && (
+          <Notice kind="bad">
+            {error.plain}
+            {error.verbatim && <pre className="node">{error.verbatim}</pre>}
+          </Notice>
+        )
+      }
+      wallet={{
+        name: walletName ?? 'WizardConnect',
+        balance: balance === null ? null : `${formatSats(balance)}${rate ? ` (${formatUsd(balance, rate)})` : ''}`,
+        onRefresh: scan,
+      }}
+    />
   );
 }
 
 function CreatedView({ c }: { c: Created }) {
-  const [qrFor, setQrFor] = useState<number | null>(null);
+  const n = c.stampUrls.length;
   return (
-    <>
+    <div className="create-panel">
       <Notice kind="ok">
-        <strong>{c.stampUrls.length} stamp{c.stampUrls.length > 1 ? 's' : ''} created.</strong> <TxLink net={c.net} txid={c.fundingTxid} label="See the transaction" />
+        <strong>
+          {n} stamp{n > 1 ? 's' : ''} created.
+        </strong>{' '}
+        <TxLink net={c.net} txid={c.fundingTxid} label="See the transaction" />
       </Notice>
       <p>
         Open a stamp on your phone (or in a new tab) and press <strong>Buy</strong>. Then open another one and press <strong>Try to send it anywhere else</strong>.
       </p>
-      <table>
-        <tbody>
-          {c.stampUrls.map((u, i) => (
-            <tr key={u}>
-              <td style={{ verticalAlign: 'middle' }}>Stamp {i + 1}</td>
-              <td style={{ textAlign: 'right', verticalAlign: 'middle' }}>
-                <a className="button inline" style={{ width: 'auto', padding: '8px 12px', fontSize: 14 }} href={u} target="_blank" rel="noreferrer">
-                  Open
-                </a>{' '}
-                <CopyButton text={u} />{' '}
-                <button className="secondary inline" onClick={() => setQrFor(qrFor === i ? null : i)}>{qrFor === i ? 'Hide QR' : 'QR'}</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {qrFor !== null && (
-        <>
-          <Qr text={c.stampUrls[qrFor]!} />
-          <p className="muted small" style={{ textAlign: 'center' }}>Anyone who scans this can spend the stamp. Do not show it on a stream.</p>
-        </>
-      )}
-      <div className="row" style={{ marginTop: 12 }}>
-        <a className="button secondary" href={c.campaignUrl} target="_blank" rel="noreferrer">Track this campaign</a>
-        <a className="button secondary" href={`./shop.html#a=${encodeURIComponent(DEMO_SHOP.address[c.net])}&n=${encodeURIComponent(DEMO_SHOP.name)}`} target="_blank" rel="noreferrer">
+      <ul className="create-done-list">
+        {c.stampUrls.map((u, i) => (
+          <li key={u}>
+            <span>Stamp {i + 1}</span>
+            <a className="btn-mini" href={u} target="_blank" rel="noreferrer">
+              Open
+            </a>
+            <CopyButton text={u} />
+            <QrReveal text={u} label="QR" warning="Anyone who scans this can spend the stamp. Do not show it on a stream." />
+          </li>
+        ))}
+      </ul>
+      <div className="create-links">
+        <a className="btn btn-secondary" href={c.campaignUrl} target="_blank" rel="noreferrer">
+          Track this campaign
+        </a>
+        <a
+          className="btn btn-secondary"
+          href={`./shop.html#a=${encodeURIComponent(DEMO_SHOP.address[c.net])}&n=${encodeURIComponent(DEMO_SHOP.name)}`}
+          target="_blank"
+          rel="noreferrer"
+        >
           Open the shop counter
         </a>
       </div>
       <p className="muted small">Saved in this browser only. Stamp links hold the stamp keys: share each one with one person.</p>
-    </>
-  );
-}
-
-function MyCampaigns() {
-  const list = useMemo(loadCreated, []);
-  if (list.length === 0) return null;
-  return (
-    <div className="card">
-      <h2>Your campaigns in this browser</h2>
-      <table>
-        <tbody>
-          {list.map((c) => (
-            <tr key={c.fundingTxid}>
-              <td>
-                {c.campaignName}
-                <div className="muted small">
-                  {c.stampUrls.length} × {formatSats(BigInt(c.satsPerStamp))} · {c.merchantName}
-                </div>
-              </td>
-              <td style={{ textAlign: 'right' }}>
-                <a href={c.campaignUrl} target="_blank" rel="noreferrer">Open</a>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-function HowItWorks() {
-  return (
-    <div className="card">
-      <h2>How it works</h2>
-      <p className="muted">Every stamp is its own coin locked by a small CashScript contract with two ways out:</p>
-      <pre className="node" style={{ background: '#13241b', color: '#d7f5e3' }}>{`spend(sig stampSig)   // anyone holding the stamp link
-  one input, one output
-  output == the shop's address
-  output >= stamp - fee cap
-
-reclaim()             // anyone, after the expiry date
-  tx.time >= expiry
-  one input, one output
-  output == the sponsor's address`}</pre>
-      <p className="muted small">
-        The stamp key travels inside the link, after the #. Browsers never send that part to a server, and this site has no server of its own:
-        pages talk straight to public Bitcoin Cash nodes (Fulcrum).
-      </p>
-      <p className="muted small">
-        Honest limits: a shop could open stamp links and spend them itself, the same risk as a paper coupon. So the campaign page counts
-        “spent at the shop” with a link to each transaction, not “purchases”. After the expiry date a stamp can still be spent until someone
-        returns it; the network keeps whichever comes first.
-      </p>
+      <WalletLine connected text={<>Stamps for {c.merchantName} · back to you after {formatDay(BigInt(c.expiry))}</>} right={<span className="muted small">{shortAddress(c.fundingTxid, 6, 6)}</span>} />
     </div>
   );
 }
