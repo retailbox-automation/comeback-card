@@ -22,7 +22,7 @@ Built for BCH BLAZE 2026. New work, started during the hackathon. MIT licence.
 | The refusal comes from the network, not from us | `web/stamp.tsx` sends the raw transaction with no local check (`src/core/chain.ts` `broadcastRaw`) | the text above, as returned by a Fulcrum node |
 | Unspent stamps go back only to the sponsor | `reclaim()` in `contracts/stamp_cov.cash` | after the date anyone can press Return; the coins can only reach the sponsor’s address |
 | No server holds stamps or keys | `src/core/link.ts`: the stamp key and terms live in the URL fragment; the site is static (`dist/`) | pages talk straight to public Fulcrum nodes |
-| Every contract rule is tested | `npm test` (65 tests), `npm run test:mutation` | removing any one of 13 rules makes the tests fail |
+| Every contract rule is tested | `npm test` (69 tests), `npm run test:mutation` | removing any one of 13 rules makes the tests fail |
 
 Chipnet runs of every step (13.11.2026): funding `a7a48104…`, contract-input signing by Cashonize and Selene `b0963c62…`, `95725d86…`, covenant return `90b4ec57…`, shop payment `3fd5d78b…` — full list in `docs/spike/SPIKE-2026-11-13.md`.
 
@@ -59,10 +59,7 @@ The stamp link carries the stamp key after the `#`. Browsers do not send that pa
 ## Run it
 ```
 npm install
-npm test                 # 65 tests on Mocknet
+npm test                 # 69 tests on Mocknet
 npm run test:mutation    # 13 mutants, all must be killed
 npx vite                 # http://127.0.0.1:5173 (chipnet by default; VITE_NET=mainnet for mainnet)
 ```
-
-## How AI was used
-Built with an AI coding assistant: contract drafts, tests, page code and this README were written with AI help, then checked by running them on Mocknet and chipnet (see Proof).
