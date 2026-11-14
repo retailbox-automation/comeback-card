@@ -19,7 +19,9 @@ export const STAMP_VARIANT: Variant = import.meta.env.VITE_STAMP_VARIANT === 'si
 export const BANNER = {
   slidesUrl: '', // Widget Factory slides (Google Slides, view link)
   repoUrl: '', // public GitHub repo
-  emberTokenAddress: '', // CashTokens address for EMBER2026 community votes (Mikhail's wallet)
+  // CashTokens address for EMBER2026 community votes: Mikhail's Selene wallet, the same address
+  // he posted in the BCH BLAZE Telegram chat on 14.11.2026 (roll call msg 2972, intro msg 2996).
+  emberTokenAddress: 'bitcoincash:zqacsrldsxhhjv7fyhayldluhrnu58uqfy83p0z3g3',
 };
 
 /** Demo shop that sells stickers. Its key is in the vault; the site only knows the address. */
