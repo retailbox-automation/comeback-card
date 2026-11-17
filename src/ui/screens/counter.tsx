@@ -12,6 +12,8 @@ export interface CounterPaymentView {
   confirmed: boolean;
   height: number;
   highlight: boolean;
+  /** Row text that overrides the product / "Other payment" wording (e.g. a stamp payment on the card counter). */
+  label?: string;
 }
 
 export interface CounterScreenProps {
@@ -81,7 +83,7 @@ export function CounterScreen(p: CounterScreenProps) {
               <span className={`ct-tick ${x.fromStamp ? 'stamp' : 'other'}`} aria-hidden="true">
                 <IconCheck width={16} height={16} />
               </span>
-              <span className="ct-what">{x.fromStamp ? t.row : 'Other payment'}</span>
+              <span className="ct-what">{x.label ?? (x.fromStamp ? t.row : 'Other payment')}</span>
               <span className="ct-plus">+{x.amount}</span>
               <TxLink net={p.net} txid={x.txid} label={x.confirmed ? `block ${x.height.toLocaleString('en-US')}` : '0-conf'} className="ct-when" />
             </li>

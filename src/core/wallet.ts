@@ -37,6 +37,13 @@ export function probeRelays(urls: string[], timeoutMs: number): Promise<boolean>
     const done = (ok: boolean) => {
       clearTimeout(timer);
       for (const s of sockets) {
+        // Closing a socket that is still connecting logs "closed before the connection is established";
+        // let it open first and close it then.
+        if (s.readyState === WebSocket.CONNECTING) {
+          s.onopen = () => s.close();
+          s.onerror = () => {};
+          continue;
+        }
         try {
           s.close();
         } catch {
@@ -153,8 +160,9 @@ export class WizardWallet {
     const connected = mgr.getSessionPaths().length > 0;
     const bye = connected ? mgr.sendDisconnect().catch(() => {}) : Promise.resolve();
     void Promise.race([bye, new Promise((r) => setTimeout(r, 800))]).then(() => {
-      mgr.destroy();
+      // The relay first (it closes its subscription while the sockets are still open), the manager after.
       relay?.cleanup();
+      setTimeout(() => mgr.destroy(), 300);
     });
   }
 

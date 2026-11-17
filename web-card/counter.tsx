@@ -77,6 +77,8 @@ function Counter({ address, name, highlight, net }: { address: string; name: str
     confirmed: p.confirmed,
     height: p.height,
     highlight: p.txid === highlight,
+    // F9: a First Purchase stamp paid at the same shop is not an "other payment".
+    label: !p.fromCard && p.fromStamp ? 'First Purchase stamp' : undefined,
   });
 
   return (
