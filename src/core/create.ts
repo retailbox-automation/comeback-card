@@ -74,7 +74,10 @@ export function planFunding(
     return b;
   };
   // Size with a change output; placeholder inputs are already counted at their signed size.
-  const size = BigInt(make(sum - outTotal - 2_000n).getTransactionSize());
+  // Always measure WITH a change output (its value does not change the size). Measuring with
+  // `sum - outTotal - 2_000` dropped the change output whenever the margin was small, and the real
+  // transaction then paid 0.89 sat/byte (found by the coin-margin test, 17.11).
+  const size = BigInt(make(DUST_SATS).getTransactionSize());
   let fee = size * FEE_SATS_PER_BYTE + FEE_MARGIN_SATS;
   let change = sum - outTotal - fee;
   // Never fold a negative change into the fee: that would build a transaction paying less than 1 sat/byte.
