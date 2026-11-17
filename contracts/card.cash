@@ -1,0 +1,46 @@
+pragma cashscript ^0.14.0;
+
+// Comeback Card: a gift card for one shop, spent in parts; what is left after the expiry goes back to the giver.
+//
+// One contract instance per card. The remainder of every partial spend returns to the SAME contract
+// (same address), so the card link keeps working until the card is empty or returned.
+// - spend:   whoever holds the card key pays the shop. The shop is not a fixed address but a key:
+//            the shop signs its receiving address once ("CBC1" + locking bytecode) and the contract
+//            checks that signature with OP_CHECKDATASIG. Output 0 goes to that address; an optional
+//            output 1 carries the rest back into this card. A rest below minChange goes to the shop.
+// - reclaim: after the expiry (network time) anyone may trigger it, but the money only goes back
+//            to the giver's address, minus at most maxFee.
+contract ComebackCard(
+    pubkey cardPk,
+    pubkey shopPk,
+    bytes giverLockingBytecode,
+    int expiry,
+    int maxFee,
+    int minChange
+) {
+    function spend(sig cardSig, datasig shopSig, bytes shopLockingBytecode) {
+        require(checkSig(cardSig, cardPk), "card key signature required");
+        require(checkDataSig(shopSig, 0x43424331 + shopLockingBytecode, shopPk), "shop must have signed this address");
+        require(tx.inputs.length == 1, "card must be spent alone");
+        require(tx.outputs[0].lockingBytecode == shopLockingBytecode, "output 0 must pay the shop");
+        require(tx.outputs[0].tokenCategory == 0x, "no tokens on the shop output");
+        if (tx.outputs.length == 2) {
+            require(tx.outputs[1].lockingBytecode == tx.inputs[this.activeInputIndex].lockingBytecode, "output 1 must return to this card");
+            require(tx.outputs[1].tokenCategory == 0x, "no tokens on the card output");
+            require(tx.outputs[1].value >= minChange, "rest below the minimum: give it to the shop");
+            require(tx.outputs[0].value + tx.outputs[1].value >= tx.inputs[0].value - maxFee, "fee above the cap");
+        } else {
+            require(tx.outputs.length == 1, "one or two outputs only");
+            require(tx.outputs[0].value >= tx.inputs[0].value - maxFee, "fee above the cap");
+        }
+    }
+
+    function reclaim() {
+        require(tx.time >= expiry, "card has not expired yet");
+        require(tx.inputs.length == 1, "card must be returned alone");
+        require(tx.outputs.length == 1, "exactly one output: the giver");
+        require(tx.outputs[0].lockingBytecode == giverLockingBytecode, "output must pay the giver");
+        require(tx.outputs[0].tokenCategory == 0x, "no tokens on the giver output");
+        require(tx.outputs[0].value >= tx.inputs[0].value - maxFee, "fee above the cap");
+    }
+}

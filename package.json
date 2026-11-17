@@ -9,7 +9,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "compile": "cashc contracts/stamp.cash -f ts -o src/contract/stamp.artifact.ts && cashc contracts/stamp_cov.cash -f ts -o src/contract/stamp_cov.artifact.ts",
+    "compile": "cashc contracts/stamp.cash -f ts -o src/contract/stamp.artifact.ts && cashc contracts/stamp_cov.cash -f ts -o src/contract/stamp_cov.artifact.ts && cashc contracts/card.cash -f ts -o src/contract/card.artifact.ts",
     "test": "vitest run",
     "test:mutation": "node scripts/mutation-test.mjs",
     "dev": "vite",
