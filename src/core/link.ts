@@ -48,7 +48,7 @@ export function termsFor(c: CampaignTerms, stampPk: Uint8Array): StampTerms {
 
 // ---- byte helpers -------------------------------------------------------------------------------
 
-class Writer {
+export class Writer {
   private parts: number[] = [];
   u8(n: number) {
     if (!Number.isInteger(n) || n < 0 || n > 255) throw new Error(`u8 out of range: ${n}`);
@@ -76,7 +76,7 @@ class Writer {
   }
 }
 
-class Reader {
+export class Reader {
   private i = 0;
   constructor(private readonly b: Uint8Array) {}
   private need(n: number) {
@@ -109,8 +109,8 @@ class Reader {
   }
 }
 
-const toB64Url = (b: Uint8Array) => binToBase64(b).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-function fromB64Url(s: string): Uint8Array {
+export const toB64Url = (b: Uint8Array) => binToBase64(b).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+export function fromB64Url(s: string): Uint8Array {
   if (!/^[A-Za-z0-9_-]+$/.test(s)) throw new Error('link contains characters that do not belong in it');
   const b64 = s.replace(/-/g, '+').replace(/_/g, '/');
   return base64ToBin(b64 + '='.repeat((4 - (b64.length % 4)) % 4));
