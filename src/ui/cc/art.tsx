@@ -3,12 +3,12 @@
 export function Bow({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 120 120" aria-hidden="true">
-      <path d="M58 0h22v120H58z" fill="#00bd80" transform="rotate(-38 69 60)" opacity="0.92" />
-      <path d="M60 52c-10-22-38-30-44-18s14 26 44 22Z" fill="#00bd80" stroke="#0a9a68" strokeWidth="2.5" strokeLinejoin="round" />
-      <path d="M64 52c18-18 46-18 46-4s-24 18-46 8Z" fill="#00bd80" stroke="#0a9a68" strokeWidth="2.5" strokeLinejoin="round" />
-      <path d="M56 58c-8 16-10 34-6 44l10-8 6 10c6-14 6-30 0-46Z" fill="#0aa874" stroke="#0a9a68" strokeWidth="2.5" strokeLinejoin="round" />
-      <path d="M68 58c10 12 18 28 18 40l-12-4-2 12c-8-12-10-30-4-48Z" fill="#0aa874" stroke="#0a9a68" strokeWidth="2.5" strokeLinejoin="round" />
-      <ellipse cx="62" cy="55" rx="9" ry="8" fill="#0bc98a" stroke="#0a9a68" strokeWidth="2.5" />
+      <path d="M58 0h22v120H58z" fill="#12dc8d" transform="rotate(-38 69 60)" opacity="0.95" />
+      <path d="M60 52c-10-22-38-30-44-18s14 26 44 22Z" fill="#12dc8d" stroke="#05a866" strokeWidth="2.5" strokeLinejoin="round" />
+      <path d="M64 52c18-18 46-18 46-4s-24 18-46 8Z" fill="#12dc8d" stroke="#05a866" strokeWidth="2.5" strokeLinejoin="round" />
+      <path d="M56 58c-8 16-10 34-6 44l10-8 6 10c6-14 6-30 0-46Z" fill="#0bc77c" stroke="#05a866" strokeWidth="2.5" strokeLinejoin="round" />
+      <path d="M68 58c10 12 18 28 18 40l-12-4-2 12c-8-12-10-30-4-48Z" fill="#0bc77c" stroke="#05a866" strokeWidth="2.5" strokeLinejoin="round" />
+      <ellipse cx="62" cy="55" rx="9" ry="8" fill="#19e596" stroke="#05a866" strokeWidth="2.5" />
     </svg>
   );
 }
