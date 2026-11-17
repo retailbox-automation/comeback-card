@@ -2,6 +2,10 @@
 import { binToHex, decodeTransaction, hexToBin } from '@bitauth/libauth';
 import artifactSig from '../contract/stamp.artifact';
 import artifactCov from '../contract/stamp_cov.artifact';
+import artifactCard from '../contract/card.artifact';
+
+/** Contract code of a Comeback Card; finding it in an input means the coins came out of a card. */
+export const CARD_CODE_HEX: string = artifactCard.debug.bytecode;
 
 /**
  * Contract code shared by every stamp (constructor arguments are pushed before it in the redeem script).
@@ -13,6 +17,8 @@ export interface Payment {
   txid: string;
   receivedSatoshis: bigint;
   fromStamp: boolean;
+  /** The coins came out of a Comeback Card contract. */
+  fromCard: boolean;
   confirmed: boolean;
   height: number;
 }
@@ -28,7 +34,8 @@ export function classifyPayment(txid: string, txHex: string, height: number, mer
     const u = binToHex(i.unlockingBytecode);
     return STAMP_CODE_HEX.some((code) => u.includes(code));
   });
-  return { txid, receivedSatoshis, fromStamp, confirmed: height > 0, height };
+  const fromCard = tx.inputs.some((i) => binToHex(i.unlockingBytecode).includes(CARD_CODE_HEX));
+  return { txid, receivedSatoshis, fromStamp, fromCard, confirmed: height > 0, height };
 }
 
 /** Newest first: unconfirmed (height <= 0) on top, then by block height. */

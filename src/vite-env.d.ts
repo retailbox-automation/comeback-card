@@ -8,3 +8,9 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+/** Contract source shown on the Rules page (Vite `?raw` import). */
+declare module '*.cash?raw' {
+  const source: string;
+  export default source;
+}

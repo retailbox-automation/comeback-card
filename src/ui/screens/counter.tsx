@@ -21,13 +21,21 @@ export interface CounterScreenProps {
   payments: CounterPaymentView[] | null;
   notices?: ReactNode;
   address: string;
+  /** Which product's payments get the sticker. "fromStamp" in the views means "from this product". */
+  product?: 'stamp' | 'card';
 }
 
+const PRODUCT = {
+  stamp: { brand: 'First Purchase · counter', paid: 'Paid with a First Purchase stamp', row: 'First Purchase stamp', idle: 'Waiting for a stamp…', idleSub: 'Stamps paid here show up within seconds.', label: 'stamp', foot: '“Stamp” means the coins came out of a First Purchase stamp contract (its code is visible in the transaction).' },
+  card: { brand: 'Comeback Card · counter', paid: 'Paid with a Comeback Card', row: 'Comeback Card', idle: 'Waiting for a card payment…', idleSub: 'Card payments made here show up within seconds.', label: 'card', foot: '“Comeback Card” means the coins came out of a Comeback Card contract (its code is visible in the transaction).' },
+} as const;
+
 export function CounterScreen(p: CounterScreenProps) {
+  const t = PRODUCT[p.product ?? 'stamp'];
   return (
     <div className="ct" data-frame="counter">
       <header className="ct-head">
-        <a className="ct-brand" href="./">First Purchase · counter</a>
+        <a className="ct-brand" href="./">{t.brand}</a>
         <NetBadge net={p.net} />
       </header>
       <div className="ct-shop">
@@ -40,7 +48,7 @@ export function CounterScreen(p: CounterScreenProps) {
           <div className="ct-amount" title={p.focus.sats}>
             +{p.focus.amount}
           </div>
-          <div className="ct-with">{p.focus.fromStamp ? 'Paid with a First Purchase stamp' : 'Paid to this shop'}</div>
+          <div className="ct-with">{p.focus.fromStamp ? t.paid : 'Paid to this shop'}</div>
           <span className={`ct-status ${p.focus.confirmed ? 'confirmed' : 'zero'}`}>
             {p.focus.confirmed ? `Confirmed in block ${p.focus.height}` : 'Received (0-conf) · confirming'}
           </span>
@@ -58,8 +66,8 @@ export function CounterScreen(p: CounterScreenProps) {
       ) : (
         p.payments && (
           <div className="ct-idle">
-            <div className="ct-idle-title">Waiting for a stamp…</div>
-            <div className="muted small">Stamps paid here show up within seconds.</div>
+            <div className="ct-idle-title">{t.idle}</div>
+            <div className="muted small">{t.idleSub}</div>
           </div>
         )
       )}
@@ -73,7 +81,7 @@ export function CounterScreen(p: CounterScreenProps) {
               <span className={`ct-tick ${x.fromStamp ? 'stamp' : 'other'}`} aria-hidden="true">
                 <IconCheck width={16} height={16} />
               </span>
-              <span className="ct-what">{x.fromStamp ? 'First Purchase stamp' : 'Other payment'}</span>
+              <span className="ct-what">{x.fromStamp ? t.row : 'Other payment'}</span>
               <span className="ct-plus">+{x.amount}</span>
               <TxLink net={p.net} txid={x.txid} label={x.confirmed ? `block ${x.height.toLocaleString('en-US')}` : '0-conf'} className="ct-when" />
             </li>
@@ -81,8 +89,7 @@ export function CounterScreen(p: CounterScreenProps) {
         </ul>
       )}
       <p className="ct-foot">
-        Shop address: <span className="addr">{p.address}</span>. “Stamp” means the coins came out of a First Purchase stamp contract (its code is visible
-        in the transaction).
+        Shop address: <span className="addr">{p.address}</span>. {t.foot}
       </p>
     </div>
   );

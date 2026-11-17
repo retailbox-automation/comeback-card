@@ -1,0 +1,114 @@
+/* Comeback Card — on top of theme.css (system B). Card page follows the picture "reco" chosen 17.11.2026. */
+
+/* ---- shared ---- */
+.cc-top { max-width: 1120px; margin: 0 auto; padding: 14px 20px; }
+.cc-narrow { max-width: 720px; margin: 0 auto; padding: 8px 20px 24px; }
+.cc-h1-small { font-size: 32px; line-height: 1.15; letter-spacing: -0.02em; margin: 12px 0 10px; }
+.cc-h3 { font-size: 17px; margin: 18px 0 4px; }
+.cc-lead { font-size: 18px; color: var(--ink-2); margin: 0 0 14px; }
+.cc-footer { max-width: 900px; margin: 32px auto 24px; padding: 0 20px; color: var(--muted); font-size: 14px; text-align: center; }
+.cc-footer p { margin: 6px 0; }
+.cc-walletline { margin: 10px 0 0; }
+
+.cc-badge { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 4px 12px 4px 9px; font-size: 14px; font-weight: 700; line-height: 1.4; white-space: nowrap; }
+.cc-badge svg { width: 16px; height: 16px; flex: none; }
+.cc-badge-ok { background: var(--green); color: #fff; }
+.cc-badge-wait { background: #fff8e8; color: #b06f00; border: 1.5px solid #e9a52a; }
+
+.cc-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 10px; }
+.cc-chip { border: 1.5px solid var(--line-strong); background: #fff; border-radius: 12px; padding: 9px 14px; font-weight: 700; color: var(--ink); cursor: pointer; }
+.cc-chip.on { border-color: var(--green); background: var(--green-soft); }
+.cc-chip:disabled { opacity: 0.5; cursor: default; }
+.cc-label { display: block; font-weight: 700; font-size: 14px; color: var(--ink-2); margin-top: 6px; }
+.cc-input { width: 100%; border: 1.5px solid var(--line-strong); border-radius: 12px; padding: 11px 12px; font: inherit; margin: 4px 0 10px; background: #fff; }
+.cc-input.mono { font-family: var(--mono); font-size: 14px; }
+.cc-input:focus { border-color: var(--green); outline: none; }
+.cc-sum { background: var(--tile); border-radius: 14px; padding: 12px 14px; margin: 6px 0 12px; }
+.cc-sum > div { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; }
+.cc-sum p { margin: 6px 0 0; }
+.cc-shopline { display: flex; flex-direction: column; gap: 2px; margin: -4px 0 10px; }
+.cc-give-lead { margin: 0 0 12px; color: var(--ink-2); }
+.cc-give .btn-create { width: 100%; }
+
+/* ---- home ---- */
+.cc-hero { max-width: 1120px; margin: 0 auto; padding: 18px 20px 8px; display: grid; gap: 28px; grid-template-columns: 1fr; align-items: start; }
+@media (min-width: 900px) { .cc-hero { grid-template-columns: 1.1fr 1fr; gap: 48px; padding-top: 36px; } }
+.cc-kicker { display: inline-block; background: var(--green-soft); color: var(--green-deep); font-weight: 700; border-radius: 999px; padding: 5px 12px; font-size: 14px; margin: 0 0 14px; }
+.cc-hero h1 { font-size: clamp(36px, 5.2vw, 60px); line-height: 1.04; letter-spacing: -0.03em; margin: 0 0 16px; }
+.cc-hero-panel { background: #fff; border: 1px solid var(--line-2); border-radius: 22px; box-shadow: var(--shadow); overflow: hidden; }
+.cc-hero-photo { height: 150px; overflow: hidden; }
+.cc-hero-photo .photo { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cc-hero-panel .create { border: 0; box-shadow: none; margin: 0; border-radius: 0; }
+.cc-try, .cc-mine, .cc-how { max-width: 1120px; margin: 24px auto 0; padding: 0 20px; }
+.cc-try { padding: 18px 20px; }
+.cc-how h2, .cc-mine h2, .cc-try h2, .cc-rules h2 { font-size: 22px; margin: 18px 0 10px; }
+.cc-steps { padding-left: 22px; margin: 0 0 12px; }
+.cc-steps li { margin: 6px 0; }
+.cc-diff { background: var(--tile); border-radius: 14px; padding: 12px 14px; }
+
+/* ---- rules ---- */
+.cc-table { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; font-size: 15px; }
+.cc-table th { text-align: left; background: var(--green-soft); color: var(--forest); padding: 10px 12px; }
+.cc-table th + th { background: #fff4dc; color: var(--amber); }
+.cc-table td { vertical-align: top; padding: 10px 12px; border-top: 1px solid var(--line); width: 50%; }
+.cc-whatif dt { font-weight: 800; margin-top: 16px; }
+.cc-whatif dd { margin: 6px 0 0; color: var(--ink-2); }
+.cc-source { background: var(--forest); color: #e8f5ee; border-radius: 14px; padding: 14px; overflow-x: auto; font-size: 13px; line-height: 1.5; }
+@media (max-width: 560px) {
+  .cc-table, .cc-table tbody, .cc-table tr, .cc-table td, .cc-table thead, .cc-table th { display: block; width: auto; }
+  .cc-table thead { display: none; }
+  .cc-table td:first-child::before { content: 'Guaranteed: '; font-weight: 800; color: var(--forest); }
+  .cc-table td:last-child::before { content: 'Not guaranteed: '; font-weight: 800; color: var(--amber); }
+}
+
+/* ---- card page (picture "reco") ---- */
+.cc-card-page { background: #fff; }
+.ccs { max-width: 460px; margin: 0 auto; padding: 4px 16px 8px; }
+.ccs-pad { margin: 8px 0; }
+.ccs-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 2px 14px; }
+.ccs-brand { font-weight: 800; font-size: 28px; letter-spacing: -0.02em; color: var(--ink); text-decoration: none; }
+.ccs-card { background: #fff; border: 1px solid var(--line-2); border-radius: 22px; box-shadow: var(--shadow); overflow: hidden; }
+.ccs-photo { position: relative; height: 180px; overflow: hidden; }
+.ccs-photo .photo { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ccs-photo-plain { height: 100%; background: linear-gradient(135deg, var(--green-soft), var(--green-soft-2)); }
+.ccs-bow { position: absolute; top: -10px; right: -10px; width: 132px; height: 132px; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.18)); }
+.ccs-card-body { padding: 16px 20px 20px; }
+.ccs-shop { display: flex; gap: 14px; align-items: center; }
+.ccs-shop-name { font-weight: 800; font-size: 22px; line-height: 1.2; }
+.ccs-shop-sub { color: var(--muted); font-size: 17px; }
+.ccs-balance { font-weight: 900; font-size: 68px; line-height: 1; letter-spacing: -0.035em; margin-top: 14px; }
+.ccs-balance-line { color: var(--muted); font-size: 17px; margin-top: 6px; }
+.ccs-bar { height: 16px; border-radius: 999px; background: #e9ebee; margin-top: 14px; overflow: hidden; }
+.ccs-bar span { display: block; height: 100%; background: var(--green); border-radius: 999px; transition: width 0.4s ease; }
+.ccs-comeback { position: relative; display: flex; align-items: center; gap: 14px; background: var(--green-soft); border-radius: 18px; padding: 14px 100px 14px 18px; margin-top: 16px; min-height: 78px; }
+.ccs-return-icon { width: 30px; height: 30px; color: var(--forest); flex: none; }
+.ccs-comeback-text p { margin: 0; font-weight: 700; color: var(--forest); font-size: 16px; line-height: 1.3; }
+.ccs-comeback.ended { background: #fff4dc; }
+.ccs-comeback.ended .ccs-return-icon, .ccs-comeback.ended p { color: var(--amber); }
+.ccs-return-btn { margin-top: 10px; }
+.ccs-mascot { position: absolute; right: 4px; bottom: -6px; width: 96px; height: 88px; }
+.ccs-pay, .ccs-activity { background: #fff; border: 1px solid var(--line-2); border-radius: 18px; box-shadow: var(--shadow); margin-top: 16px; }
+.ccs-pay { padding: 16px; }
+.ccs-chips { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 10px; }
+.ccs-chip { border: 1.5px solid var(--line-strong); background: #fff; border-radius: 14px; padding: 12px 4px; font-weight: 800; font-size: 19px; color: var(--ink); cursor: pointer; }
+.ccs-chip.on { border-color: var(--green); background: var(--green-soft); box-shadow: inset 0 0 0 1px var(--green); }
+.ccs-pay-btn { width: 100%; margin-top: 12px; font-size: 19px; padding: 15px 10px; border-radius: 12px; }
+.ccs-note { text-align: center; color: var(--muted); font-size: 14px; margin: 8px 0 0; }
+.ccs-pay .notice { margin-top: 12px; }
+.ccs-cashout p { margin: 0 0 8px; }
+.ccs-activity { padding: 2px 18px; }
+.ccs-activity ul { list-style: none; margin: 0; padding: 0; }
+.ccs-activity li { padding: 13px 0; border-bottom: 1px solid var(--line); }
+.ccs-activity li:last-child { border-bottom: 0; }
+.ccs-act-text { display: block; font-weight: 700; font-size: 16px; color: var(--ink); text-decoration: none; margin-bottom: 7px; }
+.ccs-act-text:hover { text-decoration: underline; }
+.ccs-links { display: flex; justify-content: space-between; align-items: center; padding: 18px 10px 6px; }
+.ccs-link { color: var(--green-link); font-weight: 700; font-size: 17px; text-decoration: underline; text-underline-offset: 3px; background: none; border: 0; padding: 0; cursor: pointer; font-family: inherit; }
+.ccs-more { color: var(--ink-2); font-size: 14px; margin-top: 18px; border-top: 1px solid var(--line); padding-top: 6px; }
+.ccs-more h2 { font-size: 17px; margin: 12px 0 6px; }
+@media (max-width: 380px) {
+  .ccs-balance { font-size: 56px; }
+  .ccs-chip { font-size: 17px; }
+  .ccs-comeback { padding-right: 84px; }
+  .ccs-mascot { width: 80px; height: 74px; }
+}

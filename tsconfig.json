@@ -14,5 +14,5 @@
     "types": ["node", "vitest/globals"],
     "noEmit": true
   },
-  "include": ["src", "test", "web", "vite.config.ts", "vitest.config.ts"]
+  "include": ["src", "test", "web", "web-card", "vite.config.ts", "vite.card.config.ts", "vitest.config.ts"]
 }

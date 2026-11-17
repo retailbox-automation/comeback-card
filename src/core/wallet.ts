@@ -138,14 +138,24 @@ export class WizardWallet {
   }
 
   stop(): void {
-    if (this.manager) {
-      this.manager.sendDisconnect().catch(() => {});
-      this.manager.destroy();
-    }
-    this.relay?.cleanup();
+    const mgr = this.manager;
+    const relay = this.relay;
     this.manager = null;
     this.relay = null;
     this.set({ kind: 'idle' });
+    if (!mgr) {
+      relay?.cleanup();
+      return;
+    }
+    // F7 (17.11): sending "disconnect" while the sockets were already being closed logged
+    // "WebSocket is already in CLOSING or CLOSED state". Say goodbye only to a wallet that is
+    // actually connected, and close the sockets after that message (or after a short wait).
+    const connected = mgr.getSessionPaths().length > 0;
+    const bye = connected ? mgr.sendDisconnect().catch(() => {}) : Promise.resolve();
+    void Promise.race([bye, new Promise((r) => setTimeout(r, 800))]).then(() => {
+      mgr.destroy();
+      relay?.cleanup();
+    });
   }
 
   /** Chain of the connected wallet, read from the xpub version of its receive path. */
