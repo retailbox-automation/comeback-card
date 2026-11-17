@@ -30,7 +30,8 @@ export interface CardState {
 }
 
 const seen = (txid: string, height: number): Seen => ({ txid, height, confirmed: height > 0 });
-const rank = (h: number) => (h <= 0 ? Number.MAX_SAFE_INTEGER : h);
+/** Newer first: unconfirmed above confirmed; Fulcrum marks unconfirmed-with-unconfirmed-parents as -1. */
+const rank = (h: number) => (h > 0 ? h : h === 0 ? Number.MAX_SAFE_INTEGER - 1 : Number.MAX_SAFE_INTEGER);
 
 export async function cardState(
   chain: ChainReader,
@@ -62,6 +63,23 @@ export async function cardState(
   const spent = new Set<string>();
   const events: CardEvent[] = [];
   let fundedSatoshis = 0n;
+  // Depth in the card's own chain (a gift is 0, a payment from its rest is 1, …): orders events in one block.
+  const parents = new Map<string, string[]>();
+  for (const { txid, tx } of txs) {
+    parents.set(
+      txid,
+      tx.inputs.map((i) => `${binToHex(i.outpointTransactionHash)}:${i.outpointIndex}`).filter((k) => coins.has(k)).map((k) => coins.get(k)!.txid),
+    );
+  }
+  const depth = new Map<string, number>();
+  const depthOf = (txid: string, guard = 0): number => {
+    const known = depth.get(txid);
+    if (known !== undefined) return known;
+    const ps = parents.get(txid) ?? [];
+    const d = ps.length === 0 || guard > txs.length ? 0 : 1 + Math.max(...ps.map((p) => depthOf(p, guard + 1)));
+    depth.set(txid, d);
+    return d;
+  };
   for (const { txid, height, tx } of txs) {
     const spends = tx.inputs
       .map((i) => `${binToHex(i.outpointTransactionHash)}:${i.outpointIndex}`)
@@ -88,7 +106,7 @@ export async function cardState(
 
   const unspent = [...coins.entries()].filter(([k]) => !spent.has(k)).map(([, c]) => c);
   unspent.sort((a, b) => (a.satoshis === b.satoshis ? 0 : a.satoshis > b.satoshis ? -1 : 1));
-  events.sort((a, b) => rank(b.seen.height) - rank(a.seen.height));
+  events.sort((a, b) => rank(b.seen.height) - rank(a.seen.height) || depthOf(b.seen.txid) - depthOf(a.seen.txid));
   return {
     fundedSatoshis,
     balanceSatoshis: unspent.reduce((s, c) => s + c.satoshis, 0n),

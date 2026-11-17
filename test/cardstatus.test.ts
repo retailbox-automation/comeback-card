@@ -109,6 +109,17 @@ describe('card status from the chain', () => {
     expect(new Set(backward.events.map((e) => e.seen.txid))).toEqual(new Set(forward.events.map((e) => e.seen.txid)));
   });
 
+  it('newest first even when nothing is confirmed yet: payment from the rest, payment, then the gift', async () => {
+    const w = setup();
+    const f = await fund(w, GIFT, 0);
+    const a = await w.send(buildCardSpend(w.contract, w.provider, await coin(w), w.cardKey, w.approval, 15_000n).builder, 0);
+    const b = await w.send(buildCardSpend(w.contract, w.provider, await coin(w), w.cardKey, w.approval, 5_000n).builder, 0);
+    for (const order of [[f, a, b], [b, a, f], [a, f, b]]) {
+      const s = await cardState(fakeChain(w, order), w.cardLB, w.shopLB, w.giverLB);
+      expect(s.events.map((e) => e.seen.txid)).toEqual([b, a, f]);
+    }
+  });
+
   it('a second gift on the same card adds up (anyone can top it up)', async () => {
     const w = setup();
     await fund(w, GIFT, 977_400);
