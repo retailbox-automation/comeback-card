@@ -20,6 +20,11 @@ export const CARD_MAX_FEE = 1000n;
 export const CARD_MIN_CHANGE = 1000n;
 /** Smallest card the UI allows: room for a few spends and their fees. */
 export const MIN_CARD_SATS = 5000n;
+/**
+ * Network fee reserve the giver adds on top of the gift: about three partial payments (≈510 sats each)
+ * and the return (≈310 sats) at 1 sat/byte. The shop always receives the full amount of each payment.
+ */
+export const CARD_FEE_RESERVE_SATS = 2_000n;
 /** Domain tag in front of the address the shop signs, so a shop signature from elsewhere can't be reused. */
 export const SHOP_APPROVAL_TAG = utf8ToBin('CBC1');
 

@@ -24,6 +24,17 @@ export const BANNER = {
   emberTokenAddress: 'bitcoincash:zqacsrldsxhhjv7fyhayldluhrnu58uqfy83p0z3g3',
 };
 
+/**
+ * Comeback Card: the demo shop's public shop link (its signing key's public key and signature over the demo
+ * shop address). The signing keys live only in the vault (BCHCC_<NET>_DEMO_SHOP_SIGNING_KEY, made 17.11.2026).
+ */
+export const CARD_DEMO_SHOP_LINK: Record<ChainNet, string> = {
+  chipnet:
+    'wgEaTWFwbGUgU3RyZWV0IENvZmZlZSAoZGVtbykCNE6fi7R2ZWxAV-7bEx74-pk0KR8o_jNVO3comRt5TjkZdqkUPWrRb8SWeeAmIMAcbxDockUru6uIrHDcxm9CErnDJ8L2Am4UH8dzQWIzcM12Ih2S60TNabcNa-h68pBbg1SqN8865l4lFkNOA90QbOAwB0KUCVg8HM8',
+  mainnet:
+    'wgAaTWFwbGUgU3RyZWV0IENvZmZlZSAoZGVtbykDheIltIiQx_0j_-dk5AqyybCG52YTxGwARb_C5tCZZY0ZdqkUiAE7sZ3nSse0MoRAIHVsty1S8QuIrCF5bFP7wDFFtmcOPnH137fcOUnt-OECLUKA_EKdO4EWiHHHOb5Sk77jt00Y-goJVVS9ni0FgXwfQ_lyC_mAtEE',
+};
+
 /** Demo shop that sells stickers. Its key is in the vault; the site only knows the address. */
 export const DEMO_SHOP = {
   name: 'Maple Street Coffee (demo)',
