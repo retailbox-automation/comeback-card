@@ -56,7 +56,7 @@ reclaim()                                                         anyone, after 
 The card link carries the card key, the shop’s signed address and the giver’s address after the `#`. Browsers never send that part to a server, and the site has no server of its own.
 
 ## Tests
-- `npm test` — 132 tests on Mocknet. Every card rule has a test that builds the forbidden transaction and checks that both the contract and a node-like verifier refuse it. The card status is tested on real transactions in shuffled order.
+- `npm test` — 137 tests on Mocknet. Every card rule has a test that builds the forbidden transaction and checks that both the contract and a node-like verifier refuse it. The card status is tested on real transactions in shuffled order.
 - `npm run test:mutation` — 35 mutants (each rule removed or weakened in turn), all must be killed.
 - `CARD_LIVE=1 LIVE=1 npx vitest run test/live/card.live.ts` — the live run above (keys from a vault, links written to a file).
 
