@@ -18,6 +18,7 @@ import { readerOn } from '../src/core/status';
 import { addressOf, lockingBytecodeOf } from '../src/core/stamp';
 import { formatSats, formatUsd, usdPerBch, usdToSats } from '../src/core/price';
 import { explainNodeError } from '../src/core/view';
+import { endedText } from '../src/core/cardview';
 
 const PRESETS = [0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10, 20];
 
@@ -244,9 +245,7 @@ function CardPage({ link }: { link: CardLink }) {
   const comeback = ended
     ? {
         kind: 'ended' as const,
-        text: coin
-          ? `This card ended on ${formatMonthDay(link.expiry)}. What’s left can only go back to the giver, and anyone can send it now.`
-          : `This card ended on ${formatMonthDay(link.expiry)}.`,
+        text: endedText(mtp ?? link.expiry, link.expiry, !!coin),
         busy: returning,
         onReturn: returnRest,
         result: returnResult ? (

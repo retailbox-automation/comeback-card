@@ -85,6 +85,7 @@
 .ccs-balance-line { color: var(--muted); font-size: 17px; margin-top: 6px; }
 .ccs-bar { height: 16px; border-radius: 999px; background: #e9ebee; margin-top: 14px; overflow: hidden; }
 .ccs-bar span { display: block; height: 100%; background: var(--green); border-radius: 999px; transition: width 0.4s ease; }
+.ccs-held { color: var(--muted); font-size: 13px; margin-top: 8px; }
 .ccs-comeback { position: relative; display: flex; align-items: center; gap: 14px; background: #e3fae8; border-radius: 18px; padding: 14px 100px 14px 18px; margin-top: 16px; min-height: 78px; }
 .ccs-return-icon { width: 30px; height: 30px; color: var(--forest); flex: none; }
 .ccs-comeback-text p { margin: 0; font-weight: 700; color: var(--forest); font-size: 16px; line-height: 1.3; }

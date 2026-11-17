@@ -85,6 +85,7 @@ export function CardScreen(p: CardScreenProps) {
           <div className="ccs-bar" role="progressbar" aria-label="Left on the card" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(p.left * 100)}>
             <span style={{ width: `${Math.max(0, Math.min(1, p.left)) * 100}%` }} />
           </div>
+          <div className="ccs-held">Held in BCH · dollars shown at today’s price</div>
         </div>
       </section>
 
