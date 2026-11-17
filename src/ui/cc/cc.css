@@ -108,6 +108,7 @@
 .ccs-activity li:last-child { border-bottom: 0; }
 .ccs-act-text { display: block; font-weight: 700; font-size: 16px; color: var(--ink); text-decoration: none; margin-bottom: 7px; }
 .ccs-act-text:hover { text-decoration: underline; }
+.ccs-minus { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-weight: 600; }
 .ccs-links { display: flex; justify-content: space-between; align-items: center; padding: 18px 10px 6px; }
 .ccs-link { color: var(--green-link); font-weight: 700; font-size: 17px; text-decoration: underline; text-underline-offset: 3px; background: none; border: 0; padding: 0; cursor: pointer; font-family: inherit; }
 .ccs-more { color: var(--ink-2); font-size: 14px; margin-top: 18px; border-top: 1px solid var(--line); padding-top: 6px; }

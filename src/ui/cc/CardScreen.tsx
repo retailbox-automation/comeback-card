@@ -1,7 +1,7 @@
 // Card page, presentational: the holder's phone screen (picture "reco", chosen 17.11.2026).
 // The page (web-card/card.tsx) reads the chain and passes a view; the preview passes fixtures.
 import type { ReactNode } from 'react';
-import type { ChainNet } from '../../core/chain';
+import { explorerTx, type ChainNet } from '../../core/chain';
 import { Avatar, NetBadge, StorefrontPhoto, TxLink, shopTitle } from '../common';
 import { Bow, CoinMascot, ReturnIcon } from './art';
 import { SeenBadge } from './common';
@@ -162,7 +162,17 @@ export function CardScreen(p: CardScreenProps) {
           <ul>
             {p.activity.map((a) => (
               <li key={a.key}>
-                <TxLink net={p.net} txid={a.txid} label={a.text} className="ccs-act-text" />
+                <a className="ccs-act-text" href={explorerTx(p.net, a.txid)} target="_blank" rel="noreferrer">
+                  {/* Figtree draws U+2212 as narrow as a hyphen; the system font has the real minus. */}
+                  {a.text.startsWith('−') ? (
+                    <>
+                      <span className="ccs-minus">−</span>
+                      {a.text.slice(1)}
+                    </>
+                  ) : (
+                    a.text
+                  )}
+                </a>
                 <SeenBadge confirmed={a.confirmed} height={a.height} />
               </li>
             ))}
