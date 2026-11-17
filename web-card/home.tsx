@@ -115,8 +115,8 @@ function App() {
           </li>
         </ol>
         <p className="cc-diff">
-          Gift links in Paytaca Gifts and CashStamps hand over coins that can be spent anywhere, and Regulars rewards are given by the shop itself. Here anyone gives a
-          purchase at one shop, and the part that isn’t used comes back to them.
+          Paytaca Gifts and CashStamps take back a gift nobody claims, but once claimed the coins can be spent anywhere. Regulars rewards are paid by the shop itself.
+          Here anyone gives a purchase at one shop: the card can only be spent there, and whatever the person doesn’t spend comes back to the giver.
         </p>
         <p>
           <a href="./rules.html">Rules of this card</a>: the contract, what it guarantees and what it doesn’t, with a real transaction or a network refusal for each case.

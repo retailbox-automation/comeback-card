@@ -1,65 +1,78 @@
-# First Purchase
+# Comeback Card
 
-**A $0.25 Bitcoin Cash stamp that can only be spent at one shop.** A community or event hands out stamps; a newcomer pays with one at a local shop from their phone, no wallet needed. The coin itself refuses to go anywhere else. Unspent stamps go back to the sponsor after a date.
+**The gift card that gives back what isn’t spent.** Anyone gives a Bitcoin Cash card for one shop. The person who gets it spends it there in parts, from a phone, with no wallet. Whatever is left after the end date can only go back to the giver. The shop pays nothing, and every rule is checked by the network, not by a server.
 
-Built for BCH BLAZE 2026. New work, started during the hackathon. MIT licence.
+Live: https://comebackcard.retailbox-automation.com (mainnet). Built for BCH BLAZE 2026, MIT licence.
+Earlier demo of the same engine: [First Purchase](https://firstpurchase.retailbox-automation.com), stamps for one shop (see the end of this page).
 
-> Draft. Mainnet links and the live site are added before submission.
+> Draft. Slides and the public repository link are added before submission.
 
 ## Judge it in 2 minutes
 | Step | What you do | What you see |
 |---|---|---|
-| 1 | Open the site, connect a WizardConnect wallet (Selene 2026.10+, Cashonize, Paytaca) | your wallet, network and balance |
-| 2 | Create 2 stamps for the demo shop | one transaction; two stamp links |
-| 3 | Open stamp 1 on your phone, press **Buy** | “Paid”, 0-conf, then confirmed; a sticker at the shop counter |
-| 4 | Open stamp 2, press **Try to send it anywhere else**, paste your own address | the node’s own refusal, word for word |
-| 5 | Open the campaign | spent / returned / waiting, each with its transaction |
+| 1 | Open the site, press **Connect wallet to give** (WizardConnect: Selene 2026.10+, Cashonize, Paytaca) | your wallet and balance |
+| 2 | Pick an amount and an end date, press **Give** | one transaction; a card link |
+| 3 | Open the card on your phone, press **Pay** | the shop gets that amount; the rest stays on the same card; “0-conf”, then “Confirmed” |
+| 4 | On the card press **Try to cash it out**, paste your own address | the node’s own refusal, word for word |
 
-## Proof
-| Claim | Evidence | What you will see |
-|---|---|---|
-| A stamp can only pay its shop | `contracts/stamp_cov.cash`, `test/stamp.test.ts` | spend to any other address is refused by the node: `mandatory-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation)` |
-| The refusal comes from the network, not from us | `web/stamp.tsx` sends the raw transaction with no local check (`src/core/chain.ts` `broadcastRaw`) | the text above, as returned by a Fulcrum node |
-| Unspent stamps go back only to the sponsor | `reclaim()` in `contracts/stamp_cov.cash` | after the date anyone can press Return; the coins can only reach the sponsor’s address |
-| No server holds stamps or keys | `src/core/link.ts`: the stamp key and terms live in the URL fragment; the site is static (`dist/`) | pages talk straight to public Fulcrum nodes |
-| Every contract rule is tested | `npm test` (69 tests), `npm run test:mutation` | removing any one of 13 rules makes the tests fail |
+## Proof on mainnet (Nov 17, 2026)
+| Claim | Transaction or node answer |
+|---|---|
+| A card is funded by the giver | `ddf4eff8f1ca08f81ababb161ea074a3206b1ea203540819aebf05f1cacacd5a` |
+| It is spent in parts; the rest returns to the same card | `d36b481a0cba12b21966200a1095796cc25a1e0ffd2fe3a60ff32835f0a8642c`, then `9ee228ce100142ac9c042522eff1cac5ff3236e901cf655a56c216d043758edf` |
+| It can’t be cashed out to any other address | node: `mandatory-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation) (code 16)` |
+| Nobody can sign their own address as “the shop” | node: `mandatory-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation) (code 16)` |
+| After the end date the rest goes back to the giver | `ca723a5da01ea0da320e5f32f417a233b145166b0b1525a9405eaa3eb6d0c1e9` |
 
-Chipnet runs of every step (13.11.2026): funding `a7a48104…`, contract-input signing by Cashonize and Selene `b0963c62…`, `95725d86…`, covenant return `90b4ec57…`, shop payment `3fd5d78b…` — full list in `docs/spike/SPIKE-2026-11-13.md`.
+The same run on chipnet: funding `7bce8b7e…`, parts `7721b3d3…` and `066a06f2…`, return `8ab08dc0…`, and the same two refusals (`src/ui/cc/evidence.ts`).
+
+## What it guarantees, and what it doesn’t
+| Guaranteed by the network | Not guaranteed |
+|---|---|
+| Money on the card can only go to the one address the shop signed with its key, or back onto the same card. | The giver knows the card link too and could spend at the same shop first. |
+| After the end date, what’s left can only go back to the giver. | The return isn’t automatic: someone has to press Return (anyone can, no wallet). Until then the card can still be spent at the shop; the network keeps whichever transaction it sees first. |
+| The shop gets the full amount of every payment; the fee comes from the card, at most 1,000 sats per transaction. | The shop could spend a card link it was shown, like a paper coupon. |
+| No tokens can be created out of a card; a card is never spent together with other coins. | “End date” is network time, about an hour behind the clock. Dollar amounts move with the BCH price. |
+
+**Why the network fee is not a separate output.** A card is spent one input at a time, so the coins that pay future fees have to sit inside it. The giver adds a fee reserve (2,000 sats) on top of the gift and sees it as a separate line before signing; the shop is never charged.
+
+**The shop needs one signing key.** On the For shops page a shop makes a key in its own browser and signs its receiving address once. Cards check that signature with `OP_CHECKDATASIG`. A POS that shows a new address for every sale is not supported yet.
+
+**How it differs.** Paytaca Gifts and CashStamps take back a gift nobody claims, but once claimed the coins can be spent anywhere. Regulars rewards are paid by the shop itself. Here anyone gives a purchase at one shop, and whatever the person doesn’t spend comes back to the giver.
 
 ## How it works
-Each stamp is its own coin locked by a small CashScript contract:
-
 ```
-spend(sig stampSig)        anyone holding the stamp link
-  one input, one output
-  output == the shop's address
-  output >= stamp - fee cap (2,000 sats)
+spend(sig cardSig, datasig shopSig, bytes shopLockingBytecode)   whoever holds the card link
+  checkSig(cardSig, cardPk)
+  checkDataSig(shopSig, "CBC1" + shopLockingBytecode, shopPk)    the shop signed this address
+  one input; no tokens on any output
+  output 0 == the shop's address
+  two outputs: output 1 == this same card, >= 1,000 sats; outputs >= input - fee cap
+  one output:  output 0 >= input - fee cap                       (a rest too small to keep goes to the shop)
 
-reclaim()                  anyone, after the expiry date
-  tx.time >= expiry
-  one input, one output
-  output == the sponsor's address
-  output >= stamp - fee cap
+reclaim()                                                         anyone, after the end date
+  tx.time >= expiry; one input; one output == the giver's address; >= input - fee cap
 ```
+The card link carries the card key, the shop’s signed address and the giver’s address after the `#`. Browsers never send that part to a server, and the site has no server of its own.
 
-The stamp link carries the stamp key after the `#`. Browsers do not send that part to any server.
+## Tests
+- `npm test` — 132 tests on Mocknet. Every card rule has a test that builds the forbidden transaction and checks that both the contract and a node-like verifier refuse it. The card status is tested on real transactions in shuffled order.
+- `npm run test:mutation` — 35 mutants (each rule removed or weakened in turn), all must be killed.
+- `CARD_LIVE=1 LIVE=1 npx vitest run test/live/card.live.ts` — the live run above (keys from a vault, links written to a file).
 
 ## Architecture
-- `contracts/` — the stamp contract. `stamp_cov.cash` is the default; `stamp.cash` (sponsor signs the return) stays behind `VITE_STAMP_VARIANT=sig`.
-- `src/core/` — plain TypeScript, no UI: `stamp` (contract and transactions), `link` (stamp and campaign links), `status` (spent / returned / waiting from chain history), `create` (funding plan), `wallet` (WizardConnect), `chain` (Fulcrum servers, network time), `view` (plain-language node errors), `shop`, `price`.
-- `web/` — pages: create, stamp, shop counter, campaign.
-- No backend, no database. A campaign is its link: public keys of its stamps; status is read live from the chain.
-
-## Honest limits
-- A shop could open stamp links and spend them itself — the same risk as a paper coupon. The campaign page counts “spent at the shop”, with a link to each transaction, not “purchases”.
-- After the expiry date a stamp can still be spent until someone returns it; the network keeps whichever transaction it sees first.
-- “0-conf” means every node has seen the payment; a block makes it final.
-- WizardConnect uses public relays; if none answers, the page says so and nothing is sent.
+- `contracts/card.cash` — the card. `contracts/stamp_cov.cash`, `stamp.cash` — First Purchase stamps.
+- `src/core/` — plain TypeScript: `card` (contract, shop approval, transactions), `cardlink` (card, shop and shop-key links), `cardstatus` (gifts, payments, return from the address history), `chain` (Fulcrum, network time), `wallet` (WizardConnect), `create` (funding plan), `shop` (counter), `price`.
+- `web-card/` — Comeback Card pages: home, give, card, rules, for shops, counter. `web/` — First Purchase pages.
+- No backend, no database.
 
 ## Run it
 ```
 npm install
-npm test                 # 69 tests on Mocknet
-npm run test:mutation    # 13 mutants, all must be killed
-npx vite                 # http://127.0.0.1:5173 (chipnet by default; VITE_NET=mainnet for mainnet)
+npm test
+npm run test:mutation
+npx vite -c vite.card.config.ts      # http://127.0.0.1:5174 (chipnet by default; VITE_NET=mainnet for mainnet)
 ```
+
+## First Purchase (the earlier demo)
+Comeback Card grew out of First Purchase, built in the first days of BCH BLAZE 2026: a $0.25 stamp that can only be spent at one shop, with the whole stamp paid at once. Live at https://firstpurchase.retailbox-automation.com with real mainnet stamps (a stamp paid at the demo shop: `0826c62adac57aa91227336eedb7e8d5f0e8d5e14fcbf4fa102f7bdb40cfd4b6`). Run it with `npx vite` (port 5173).
