@@ -23,17 +23,24 @@ function TryRealCards() {
   useEffect(() => {
     fetch('./try-cards.json', { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : null))
-      .then((j: TryCards | null) => setT(j && j.net === NET && j.cards.length > 0 ? j : null))
+      .then((j: TryCards | null) => setT(j && j.net === NET && (j.cards.length > 0 || !!j.expiredCard) ? j : null))
       .catch(() => setT(null));
   }, []);
   if (!t) return null;
   return (
     <section className="try cc-try" aria-labelledby="try-title">
       <h2 id="try-title">Try a real card on {NET}</h2>
-      <p>
-        {t.cards.length} real {t.amountLabel} card{t.cards.length > 1 ? 's' : ''} for {t.shopName}. Open one on your phone and pay part of it: no wallet needed,
-        and it can only pay that shop.
-      </p>
+      {t.cards.length > 0 ? (
+        <p>
+          {t.cards.length} real {t.amountLabel} card{t.cards.length > 1 ? 's' : ''} for {t.shopName}. Open one on your phone and pay part of it: no wallet needed,
+          and it can only pay that shop.
+        </p>
+      ) : (
+        <p>
+          A real card for {t.shopName} whose end date has passed. Open it and press <strong>Send the rest back to the giver</strong>: no wallet needed, and the
+          network lets the coins go nowhere else.
+        </p>
+      )}
       <div className="try-links">
         {t.cards.map((href, i) => (
           <a key={href} className="try-btn" href={href}>
@@ -46,7 +53,9 @@ function TryRealCards() {
           </a>
         )}
       </div>
-      <p className="muted small">First come: if a card is empty, give your own with the form above.</p>
+      <p className="muted small">
+        First come: if a card is already empty or returned, its page shows the transaction that did it. Give your own card with the form above.
+      </p>
     </section>
   );
 }

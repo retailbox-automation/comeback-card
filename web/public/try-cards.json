@@ -2,5 +2,6 @@
   "net": "mainnet",
   "amountLabel": "$0.05",
   "shopName": "Maple Street Coffee (demo)",
-  "cards": []
+  "cards": [],
+  "expiredCard": "card.html#wQAaTWFwbGUgU3RyZWV0IENvZmZlZSAoZGVtbykDheIltIiQx_0j_-dk5AqyybCG52YTxGwARb_C5tCZZY0ZdqkUiAE7sZ3nSse0MoRAIHVsty1S8QuIrCF5bFP7wDFFtmcOPnH137fcOUnt-OECLUKA_EKdO4EWiHHHOb5Sk77jt00Y-goJVVS9ni0FgXwfQ_lyC_mAtEEZdqkUUKUdaKIbPnQMt49h-k3g88qgJHSIrGr8aA8AAAPoAAAD6BlDb21lYmFjayBDYXJkIGRlbW8sIGVuZGVkeOUb0SjQx1RfAVurU-3YxsSqsMzydZ13WtP5fY_4xf4"
 }

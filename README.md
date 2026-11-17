@@ -23,6 +23,7 @@ Earlier demo of the same engine: [First Purchase](https://firstpurchase.retailbo
 | It can’t be cashed out to any other address | node: `mandatory-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation) (code 16)` |
 | Nobody can sign their own address as “the shop” | node: `mandatory-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation) (code 16)` |
 | After the end date the rest goes back to the giver | `ca723a5da01ea0da320e5f32f417a233b145166b0b1525a9405eaa3eb6d0c1e9` |
+| A card that has already ended waits on the home page (“A card past its end date”); anyone can send it back | funded `397143bc6069a562861c3e9458295921484c1923d5468bce1274dd0262559c20` |
 
 The same run on chipnet: funding `7bce8b7e…`, parts `7721b3d3…` and `066a06f2…`, return `8ab08dc0…`, and the same two refusals (`src/ui/cc/evidence.ts`).
 
@@ -56,7 +57,7 @@ reclaim()                                                         anyone, after 
 The card link carries the card key, the shop’s signed address and the giver’s address after the `#`. Browsers never send that part to a server, and the site has no server of its own.
 
 ## Tests
-- `npm test` — 137 tests on Mocknet. Every card rule has a test that builds the forbidden transaction and checks that both the contract and a node-like verifier refuse it. The card status is tested on real transactions in shuffled order.
+- `npm test` — 139 tests on Mocknet. Every card rule has a test that builds the forbidden transaction and checks that both the contract and a node-like verifier refuse it. The card status is tested on real transactions in shuffled order.
 - `npm run test:mutation` — 35 mutants (each rule removed or weakened in turn), all must be killed.
 - `CARD_LIVE=1 LIVE=1 npx vitest run test/live/card.live.ts` — the live run above (keys from a vault, links written to a file).
 
