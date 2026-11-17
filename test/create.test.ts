@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { MockNetworkProvider, SignatureTemplate, TransactionBuilder, randomUtxo } from 'cashscript';
 import { generatePrivateKey, publicKeyToP2pkhCashAddress } from '@bitauth/libauth';
-import { NotEnoughCoins, pickCoins, planFunding, type WalletCoin } from '../src/core/create';
+import { COIN_MARGIN_SATS, NotEnoughCoins, pickCoins, planFunding, type WalletCoin } from '../src/core/create';
 import { DEFAULT_MAX_FEE, DUST_SATS, buildSpend, lockingBytecodeOf, publicKeyOf, stampContract } from '../src/core/stamp';
 
 function wallet(provider: MockNetworkProvider, amounts: bigint[]) {
@@ -77,13 +77,26 @@ describe('create stamps: funding plan', () => {
     }
   });
 
+  it('a wallet with the outputs plus the coin margin is enough (the form warns with the same margin)', () => {
+    const provider = new MockNetworkProvider();
+    const priv = generatePrivateKey();
+    const lb = lockingBytecodeOf(publicKeyToP2pkhCashAddress({ publicKey: publicKeyOf(priv), prefix: 'bchtest' }).address);
+    const c = stampContract({ variant: 'cov', stampPk: publicKeyOf(priv), merchantLockingBytecode: lb, sponsorLockingBytecode: lb, expiry: 1_794_600_000n, maxFee: DEFAULT_MAX_FEE }, provider);
+    const enough = wallet(provider, [26_048n + COIN_MARGIN_SATS]);
+    const plan = planFunding(provider, enough.map((x) => x.coin), [c.address], 26_048n, enough[0]!.coin.address, 'x');
+    expect(plan.fee).toBeGreaterThan(0n);
+    expect(plan.totalFromWallet).toBeLessThanOrEqual(26_048n + COIN_MARGIN_SATS);
+    const short = wallet(provider, [26_048n + COIN_MARGIN_SATS - 1n]);
+    expect(() => planFunding(provider, short.map((x) => x.coin), [c.address], 26_048n, short[0]!.coin.address, 'x')).toThrow(NotEnoughCoins);
+  });
+
   it('folds change below dust into the fee instead of making a dust output', () => {
     const provider = new MockNetworkProvider();
     const w = wallet(provider, [110_000n + 5_000n + 300n]);
     const priv = generatePrivateKey();
     const lb = lockingBytecodeOf(publicKeyToP2pkhCashAddress({ publicKey: publicKeyOf(priv), prefix: 'bchtest' }).address);
     const c = stampContract({ variant: 'cov', stampPk: publicKeyOf(priv), merchantLockingBytecode: lb, sponsorLockingBytecode: lb, expiry: 1_794_600_000n, maxFee: DEFAULT_MAX_FEE }, provider);
-    // Need is 110_000 + 5_000 margin; here change would be ~5_000 - fee: above dust, kept.
+    // Need is 110_000 + 1_500 margin; here change would be ~5_000 - fee: above dust, kept.
     const plan = planFunding(provider, w.map((x) => x.coin), [c.address], 110_000n, w[0]!.coin.address, 'x');
     expect(plan.change === 0n || plan.change >= DUST_SATS).toBe(true);
   });

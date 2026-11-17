@@ -15,6 +15,12 @@ export interface WalletCoin {
 // (PLACEHOLDER_P2PKH_UNLOCKING_SIZE). Adding the signature bytes again overpays by ~100 sats per input.
 /** Margin over the estimated size so the fee never falls below 1 sat/byte. */
 export const FEE_MARGIN_SATS = 10n;
+/**
+ * How much more than the outputs the picked coins must hold: the fee of a funding transaction is a few hundred
+ * sats (≈230 for one input). 1,500 covers up to about eight inputs. The UI warns with the same number, so a
+ * wallet the form accepts is never refused after the click (17.11: the form said 1,000, coin picking wanted 5,000).
+ */
+export const COIN_MARGIN_SATS = 1_500n;
 
 export interface FundingPlan {
   wc: WcTransactionObject;
@@ -57,7 +63,7 @@ export function planFunding(
 ): FundingPlan {
   if (stampAddresses.length === 0) throw new Error('no stamps to create');
   const outTotal = satsPerStamp * BigInt(stampAddresses.length);
-  const picked = pickCoins(coins, outTotal + 5_000n);
+  const picked = pickCoins(coins, outTotal + COIN_MARGIN_SATS);
   const sum = picked.reduce((s, c) => s + c.utxo.satoshis, 0n);
 
   const make = (change: bigint) => {
@@ -71,6 +77,8 @@ export function planFunding(
   const size = BigInt(make(sum - outTotal - 2_000n).getTransactionSize());
   let fee = size * FEE_SATS_PER_BYTE + FEE_MARGIN_SATS;
   let change = sum - outTotal - fee;
+  // Never fold a negative change into the fee: that would build a transaction paying less than 1 sat/byte.
+  if (change < 0n) throw new NotEnoughCoins(sum, outTotal + fee);
   if (change < DUST_SATS) {
     // Too small to keep: it goes to the fee instead of creating a dust output.
     fee += change;

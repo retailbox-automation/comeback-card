@@ -6,7 +6,7 @@ import { NET } from '../../config';
 import { PREFIX, broadcastRaw, provider } from '../../core/chain';
 import { CARD_FEE_RESERVE_SATS, CARD_MAX_FEE, CARD_MIN_CHANGE, MIN_CARD_SATS, cardContract } from '../../core/card';
 import { cardTermsOf, encodeCardLink, type CardLink, type ShopLink } from '../../core/cardlink';
-import { NotEnoughCoins, planFunding, type WalletCoin } from '../../core/create';
+import { COIN_MARGIN_SATS, NotEnoughCoins, planFunding, type WalletCoin } from '../../core/create';
 import { addressOf, lockingBytecodeOf } from '../../core/stamp';
 import { formatSats, formatUsd, usdPerBch, usdToSats } from '../../core/price';
 import { explainNodeError } from '../../core/view';
@@ -213,7 +213,7 @@ function Connected({ wallet, walletName, shop }: { wallet: WizardWallet; walletN
         </p>
       </div>
       {scanError && <Notice kind="warn">{scanError}</Notice>}
-      {balance !== null && total !== null && balance < total + 1_000n && (
+      {balance !== null && total !== null && balance < total + COIN_MARGIN_SATS && (
         <Notice kind="warn">
           Not enough coins in {walletName ?? 'your wallet'} ({formatSats(balance)}). {NET === 'chipnet' ? 'Get test coins first.' : 'Add a little BCH, then press ↻.'}
         </Notice>
