@@ -19,8 +19,8 @@ import { addressOf, lockingBytecodeOf } from '../src/core/stamp';
 import { formatSats, formatUsd, usdPerBch, usdToSats } from '../src/core/price';
 import { explainNodeError } from '../src/core/view';
 import { endedText } from '../src/core/cardview';
+import { payPresets, usdLabel } from '../src/core/cardamounts';
 
-const PRESETS = [0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10, 20];
 
 function parse(): { ok: true; link: CardLink } | { ok: false; error: string } {
   if (!location.hash || location.hash.length < 10) return { ok: false, error: 'This page needs a card link. Open the link you were given.' };
@@ -96,7 +96,7 @@ function CardPage({ link }: { link: CardLink }) {
 
   // Amount chips: the two largest round amounts well under the balance, then "All".
   const balanceUsd = balance !== null && rate ? (Number(balance) / 1e8) * rate : null;
-  const presets = balanceUsd ? PRESETS.filter((u) => u <= balanceUsd * 0.7).slice(-2) : [];
+  const presets = payPresets(balanceUsd);
   const chipKeys = [...presets.map((u) => `usd:${u}`), 'all'];
   const chosen = pick && chipKeys.includes(pick) ? pick : chipKeys[0]!;
   const chosenSats = (() => {
@@ -105,7 +105,6 @@ function CardPage({ link }: { link: CardLink }) {
     const s = usdToSats(Number(chosen.slice(4)), rate);
     return s > coin.satoshis ? coin.satoshis : s;
   })();
-  const usdLabel = (u: number) => (u < 1 ? `$${u.toFixed(2)}` : `$${u % 1 ? u.toFixed(2) : u.toFixed(0)}`);
   const buttonLabel =
     chosen === 'all' ? `Pay all ${balance !== null ? money(balance) : ''} at ${shop}` : `Pay ${usdLabel(Number(chosen.slice(4)))} at ${shop}`;
 
