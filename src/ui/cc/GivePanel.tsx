@@ -7,6 +7,7 @@ import { PREFIX, broadcastRaw, provider } from '../../core/chain';
 import { CARD_FEE_RESERVE_SATS, CARD_MAX_FEE, CARD_MIN_CHANGE, MIN_CARD_SATS, cardContract } from '../../core/card';
 import { cardTermsOf, encodeCardLink, type CardLink, type ShopLink } from '../../core/cardlink';
 import { COIN_MARGIN_SATS, NotEnoughCoins, planFunding, type WalletCoin } from '../../core/create';
+import { amountOptions, keepAllowed } from '../../core/cardamounts';
 import { addressOf, lockingBytecodeOf } from '../../core/stamp';
 import { formatSats, formatUsd, usdPerBch, usdToSats } from '../../core/price';
 import { explainNodeError } from '../../core/view';
@@ -16,7 +17,6 @@ import { Chips, WalletGate } from './common';
 
 const SCAN_DEPTH = 20;
 const STORE = 'comeback-cards-v1';
-const AMOUNTS = [0.05, 0.25, 1];
 const DAYS = [7, 14, 30];
 
 export interface GivenCard {
@@ -127,6 +127,12 @@ function Connected({ wallet, walletName, shop }: { wallet: WizardWallet; walletN
     usdPerBch().then(setRate);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [walletNet]);
+  // If the price moves and the chosen amount falls below the card minimum, step up to the smallest allowed one.
+  useEffect(() => {
+    if (!rate) return;
+    const keep = keepAllowed(usd, amountOptions(rate));
+    if (keep !== usd) setUsd(keep);
+  }, [rate, usd]);
 
   if (walletNet !== NET) {
     return (
@@ -143,6 +149,8 @@ function Connected({ wallet, walletName, shop }: { wallet: WizardWallet; walletN
   }
   if (given) return <GivenView c={given} />;
 
+  const options = amountOptions(rate);
+  const tooSmall = options.filter((o) => rate && !o.allowed);
   const balance = coins?.reduce((s, c) => s + c.utxo.satoshis, 0n) ?? null;
   const giftSats = rate ? usdToSats(usd, rate) : null;
   const total = giftSats !== null ? giftSats + CARD_FEE_RESERVE_SATS : null;
@@ -193,7 +201,23 @@ function Connected({ wallet, walletName, shop }: { wallet: WizardWallet; walletN
   return (
     <div className="create-panel cc-form">
       <label className="cc-label">Amount</label>
-      <Chips label="Amount" options={AMOUNTS.map((a) => ({ value: a, label: money(a) }))} value={usd} onChange={setUsd} disabled={!rate} />
+      <Chips
+        label="Amount"
+        options={options.map((o) => ({
+          value: o.usd,
+          label: money(o.usd),
+          disabled: !!rate && !o.allowed,
+          title: rate && !o.allowed ? `Below the ${formatSats(MIN_CARD_SATS)} card minimum at today’s price` : undefined,
+        }))}
+        value={usd}
+        onChange={setUsd}
+        disabled={!rate}
+      />
+      {tooSmall.length > 0 && (
+        <p className="muted small">
+          {tooSmall.map((o) => money(o.usd)).join(', ')} is below the {formatSats(MIN_CARD_SATS)} card minimum at today’s price (${rate?.toFixed(2)}/BCH).
+        </p>
+      )}
       <label className="cc-label">Use by</label>
       <Chips label="Use by" options={DAYS.map((d) => ({ value: d, label: dayFromNow(d) }))} value={days} onChange={setDays} />
       <label className="cc-label" htmlFor="cc-from">

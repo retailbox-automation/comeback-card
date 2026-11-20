@@ -113,7 +113,7 @@ export function Chips<T extends string | number>({
   label,
   disabled,
 }: {
-  options: { value: T; label: string }[];
+  options: { value: T; label: string; disabled?: boolean; title?: string }[];
   value: T;
   onChange: (v: T) => void;
   label: string;
@@ -128,7 +128,8 @@ export function Chips<T extends string | number>({
           role="radio"
           aria-checked={o.value === value}
           className={`cc-chip${o.value === value ? ' on' : ''}`}
-          disabled={disabled}
+          disabled={disabled || o.disabled}
+          title={o.title}
           onClick={() => onChange(o.value)}
         >
           {o.label}
