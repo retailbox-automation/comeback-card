@@ -73,6 +73,9 @@ export function GivePanel({ shop }: { shop: ShopLink }) {
               <button type="button" className="btn btn-primary btn-create" onClick={connect}>
                 Connect wallet to give
               </button>
+              <p className="cc-walletnote">
+                <strong>Only the giver needs a wallet.</strong> The person who gets the card pays with the link alone, and the shop just receives.
+              </p>
               <p className="muted small cc-walletline">WizardConnect: Selene (2026.10 or newer), Cashonize or Paytaca</p>
             </>
           )}
