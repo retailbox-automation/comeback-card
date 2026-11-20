@@ -20,6 +20,7 @@ Slides (Widget Factory template): https://docs.google.com/presentation/d/1cGlz5Y
 ## Proof on mainnet (Nov 17, 2026)
 | Claim | Transaction or node answer |
 |---|---|
+| The judge path through the site with a real wallet (Cashonize, Nov 20): a $0.01 card given, then paid in part at the demo shop | `41ac798d0844f2470349300b01ab66b0c4d18128a327833c39fc088e0024f9f4`, then `271a96820183299cf11db32558105b2629879069a6f1b3e74a81c15f1919b4b6` |
 | A card is funded by the giver | `ddf4eff8f1ca08f81ababb161ea074a3206b1ea203540819aebf05f1cacacd5a` |
 | It is spent in parts; the rest returns to the same card | `d36b481a0cba12b21966200a1095796cc25a1e0ffd2fe3a60ff32835f0a8642c`, then `9ee228ce100142ac9c042522eff1cac5ff3236e901cf655a56c216d043758edf` |
 | It can’t be cashed out to any other address | node: `mandatory-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation) (code 16)` |
