@@ -17,8 +17,8 @@ export const STAMP_VARIANT: Variant = import.meta.env.VITE_STAMP_VARIANT === 'si
  * the banner then says so instead of showing a dead link. All three must be set before submission.
  */
 export const BANNER = {
-  slidesUrl: '', // Widget Factory slides (Google Slides, view link)
-  repoUrl: '', // public GitHub repo
+  slidesUrl: 'https://docs.google.com/presentation/d/1cGlz5YIWo-ABdPrbIQ7x_Ytr_aPhKZwDRIWRwK6J3o4/edit?usp=sharing', // Widget Factory slides
+  repoUrl: 'https://github.com/retailbox-automation/comeback-card',
   // CashTokens address for EMBER2026 community votes: Mikhail's Selene wallet, the same address
   // he posted in the BCH BLAZE Telegram chat on 14.11.2026 (roll call msg 2972, intro msg 2996).
   emberTokenAddress: 'bitcoincash:zqacsrldsxhhjv7fyhayldluhrnu58uqfy83p0z3g3',

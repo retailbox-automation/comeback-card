@@ -5,7 +5,9 @@
 Live: https://comebackcard.retailbox-automation.com (mainnet). Built for BCH BLAZE 2026, MIT licence.
 Earlier demo of the same engine: [First Purchase](https://firstpurchase.retailbox-automation.com), stamps for one shop (see the end of this page).
 
-> Draft. Slides and the public repository link are added before submission.
+Slides (Widget Factory template): https://docs.google.com/presentation/d/1cGlz5YIWo-ABdPrbIQ7x_Ytr_aPhKZwDRIWRwK6J3o4/edit?usp=sharing
+
+> Status, plainly: the shop in the demo is our own demo shop, “Maple Street Coffee (demo)”; we hold its key. No real shop uses Comeback Card yet.
 
 ## Judge it in 2 minutes
 | Step | What you do | What you see |
