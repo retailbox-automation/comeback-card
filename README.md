@@ -17,7 +17,7 @@ Slides (Widget Factory template): https://docs.google.com/presentation/d/1cGlz5Y
 | 3 | Open the card on your phone, press **Pay** | the shop gets that amount; the rest stays on the same card; “0-conf”, then “Confirmed” |
 | 4 | On the card press **Try to cash it out**, paste your own address | the node’s own refusal, word for word |
 
-## Proof on mainnet (Nov 17, 2026)
+## Proof on mainnet (Nov 17 and 20, 2026)
 | Claim | Transaction or node answer |
 |---|---|
 | The judge path through the site with a real wallet (Cashonize, Nov 20): a $0.01 card given, then paid in part at the demo shop | `41ac798d0844f2470349300b01ab66b0c4d18128a327833c39fc088e0024f9f4`, then `271a96820183299cf11db32558105b2629879069a6f1b3e74a81c15f1919b4b6` |
